@@ -1,0 +1,10 @@
+# What the tests and the checks need (the integration's own runtime requirement, noiseprotocol, is in manifest.json too).
+# pytest-homeassistant-custom-component pins Home Assistant itself: 0.13.373 is Home Assistant 2026.10.2 (Python 3.14).
+pytest-homeassistant-custom-component==0.13.373
+noiseprotocol>=0.3.1,<1.0
+# Home Assistant's camera component imports these when the integration asks a camera for a stream address.
+PyTurboJPEG
+pillow
+# The alarms' store is Home Assistant's Local Calendar; its library is what a real Home Assistant installs for it (the version its manifest names).
+ical==14.3.0
+ruff==0.17.1

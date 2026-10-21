@@ -1,0 +1,35 @@
+name: validate
+
+# This is the repository HACS reads. (The maintainer's private mirror runs `.gitea/workflows/ci.yml` instead; GitHub ignores that folder.)
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: "0 6 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  hassfest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: home-assistant/actions/hassfest@master
+  hacs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hacs/action@main
+        with:
+          category: integration
+          comment: "false"
+  test:
+    runs-on: ubuntu-latest
+    container: python:3.14
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install --no-cache-dir -r requirements_test.txt
+      - run: ruff check . && ruff format --check .
+      - run: cmp custom_components/lumashow/strings.json custom_components/lumashow/translations/en.json
+      - run: pytest -q --timeout=120

@@ -1,0 +1,24 @@
+[tool.ruff]
+target-version = "py313"
+line-length = 150
+extend-exclude = ["tests/__pycache__"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "ASYNC", "SIM", "RUF", "C4", "PIE", "PT", "T20"]
+ignore = [
+    "RUF001", # the degree sign and the dashes in the words the person reads
+    "RUF002",
+    "RUF003",
+    "SIM105", # `try`/`except`/`pass` reads better than `contextlib.suppress` in a few places
+    "PT011", # `pytest.raises(InvalidData)` without a `match` is what Home Assistant's own tests do
+    "PT018", # a composite `assert a and b` with its message is how the tests here say one fact
+    "ASYNC109", # a `timeout` parameter that is honoured with `asyncio.timeout` inside is fine
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["custom_components"]
+combine-as-imports = false
+force-sort-within-sections = false
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["ASYNC110", "ASYNC230", "E501"]

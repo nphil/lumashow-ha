@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title"><title id="title">LumaShow app icon</title><defs>
+ <linearGradient id="glassFace" x1="0" y1="1" x2=".92" y2="0"><stop stop-color="#8E7FDB" stop-opacity=".83"/><stop offset=".35" stop-color="#A79BF5" stop-opacity=".92"/><stop offset=".68" stop-color="#F2EFF6" stop-opacity=".97"/><stop offset="1" stop-color="#9CCFD8" stop-opacity=".82"/></linearGradient>
+ <linearGradient id="edgeFace" x1="0" y1="1" x2=".9" y2="0"><stop stop-color="#7368C1"/><stop offset=".48" stop-color="#DDD7FF"/><stop offset="1" stop-color="#DFF6F5"/></linearGradient>
+ <radialGradient id="warmCore"><stop stop-color="#FFFAF3"/><stop offset=".44" stop-color="#F6C177"/><stop offset="1" stop-color="#EBBCBA"/></radialGradient>
+ <radialGradient id="coreBloom"><stop stop-color="#F6C177" stop-opacity=".82"/><stop offset=".38" stop-color="#EBBCBA" stop-opacity=".4"/><stop offset="1" stop-color="#A79BF5" stop-opacity="0"/></radialGradient>
+ <filter id="outerBloom" x="-90%" y="-90%" width="280%" height="280%"><feGaussianBlur stdDeviation="13"/></filter>
+ <filter id="softBloom" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="6"/></filter>
+ <g id="glassMark" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M76 47V121C76 154 102 180 135 180H196" stroke="#A79BF5" stroke-opacity=".48" stroke-width="62" filter="url(#outerBloom)"/>
+  <path d="M76 47V121C76 154 102 180 135 180H196" stroke="url(#glassFace)" stroke-width="43"/>
+  <path d="M76 47V121C76 154 102 180 135 180H196" stroke="#FFFAF3" stroke-opacity=".62" stroke-width="2.4"/>
+  <path d="M66 48V120C66 149 89 171 117 171H181" stroke="#FFFFFF" stroke-opacity=".44" stroke-width="2.4"/>
+  <path d="M84 55V118C84 146 105 164 133 164H175" stroke="#FFFFFF" stroke-opacity=".31" stroke-width="2"/>
+  <circle cx="110" cy="160" r="28" fill="url(#coreBloom)" opacity=".9" filter="url(#softBloom)" stroke="none"/>
+  <circle cx="107" cy="157" r="2.4" fill="#FFFAF3" fill-opacity=".96" stroke="none"/>
+ </g>
+ <g id="monoMark" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="43">
+  <path d="M76 47V121C76 154 102 180 135 180H196"/>
+  <circle cx="110" cy="160" r="30" fill="currentColor" stroke="none"/>
+ </g>
+</defs><defs><linearGradient id="tile" x1="0" y1="1" x2="1" y2="0"><stop stop-color="#26233A"/><stop offset=".52" stop-color="#1F1D2E"/><stop offset="1" stop-color="#393552"/></linearGradient><radialGradient id="tileGlow"><stop stop-color="#A79BF5" stop-opacity=".24"/><stop offset="1" stop-color="#191724" stop-opacity="0"/></radialGradient></defs><rect width="512" height="512" rx="112" fill="url(#tile)"/><ellipse cx="256" cy="220" rx="230" ry="230" fill="url(#tileGlow)"/><g transform="translate(0 51) scale(1.7)"><use href="#glassMark"/></g></svg>

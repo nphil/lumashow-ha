@@ -1,0 +1,489 @@
+{
+  "event.read.all_day": {
+    "event": {
+      "end": "2026-10-22T07:30:00-04:00",
+      "start": "2026-10-22",
+      "summary": "S",
+      "uid": "u1"
+    },
+    "result": {
+      "skipped": "it is an all-day event"
+    }
+  },
+  "event.read.by_hand": {
+    "event": {
+      "end": "2026-10-22T07:30:00-04:00",
+      "start": "2026-10-22T06:30:00-04:00",
+      "summary": "Gym",
+      "uid": "u1"
+    },
+    "result": {
+      "alarm": {
+        "extra": "",
+        "fields": {
+          "date": "2026-10-22",
+          "days": [],
+          "label": "Gym",
+          "on": true,
+          "ring": "every",
+          "time": "06:30",
+          "volume": 100
+        },
+        "stamp": null
+      }
+    }
+  },
+  "event.read.every_other_day": {
+    "event": {
+      "end": "2026-10-22T07:30:00-04:00",
+      "rrule": "FREQ=DAILY;INTERVAL=2",
+      "start": "2026-10-22T06:30:00-04:00",
+      "summary": "S",
+      "uid": "u1"
+    },
+    "result": {
+      "skipped": "the rule FREQ=DAILY;INTERVAL=2 has more in it than days of the week"
+    }
+  },
+  "event.read.monthly": {
+    "event": {
+      "end": "2026-10-22T07:30:00-04:00",
+      "rrule": "FREQ=MONTHLY;BYMONTHDAY=3",
+      "start": "2026-10-22T06:30:00-04:00",
+      "summary": "S",
+      "uid": "u1"
+    },
+    "result": {
+      "skipped": "the rule FREQ=MONTHLY;BYMONTHDAY=3 has more in it than days of the week"
+    }
+  },
+  "event.read.nonsense_settings": {
+    "event": {
+      "description": "volume: 0\nvolume: loud\nsound: not a word\nring: sometimes\nedited: soon black",
+      "end": "2026-10-22T07:30:00-04:00",
+      "start": "2026-10-22T06:30:00-04:00",
+      "summary": "S",
+      "uid": "u1"
+    },
+    "result": {
+      "alarm": {
+        "extra": "",
+        "fields": {
+          "date": "2026-10-22",
+          "days": [],
+          "label": "S",
+          "on": true,
+          "ring": "every",
+          "time": "06:30",
+          "volume": 100
+        },
+        "stamp": null
+      }
+    }
+  },
+  "event.read.rest_api_shape": {
+    "event": {
+      "end": "2026-10-22T07:30:00-04:00",
+      "rrule": "FREQ=DAILY",
+      "start": {
+        "dateTime": "2026-10-22T09:00:00-04:00"
+      },
+      "summary": "Alarm",
+      "uid": "u1"
+    },
+    "result": {
+      "alarm": {
+        "extra": "",
+        "fields": {
+          "days": [
+            "mon",
+            "tue",
+            "wed",
+            "thu",
+            "fri",
+            "sat",
+            "sun"
+          ],
+          "label": "",
+          "on": true,
+          "ring": "every",
+          "time": "09:00",
+          "volume": 100
+        },
+        "stamp": null
+      }
+    }
+  },
+  "event.read.series_with_settings": {
+    "event": {
+      "description": "volume: 60%\nsound: dawn\nring: ONE\nedited: 1792500000 lumashow-black\nRemember the keys",
+      "end": "2026-10-22T07:30:00-04:00",
+      "rrule": "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR",
+      "start": "2026-10-21T07:05:00-04:00",
+      "summary": "(off) Wake up",
+      "uid": "u1"
+    },
+    "result": {
+      "alarm": {
+        "extra": "Remember the keys",
+        "fields": {
+          "days": [
+            "mon",
+            "tue",
+            "wed",
+            "thu",
+            "fri"
+          ],
+          "label": "Wake up",
+          "on": false,
+          "ring": "one",
+          "sound": "dawn",
+          "time": "07:05",
+          "volume": 60
+        },
+        "stamp": {
+          "at": 1792500000,
+          "by": "lumashow-black"
+        }
+      }
+    }
+  },
+  "event.write.defaults": {
+    "extra": "",
+    "fields": {
+      "days": [
+        "mon",
+        "tue",
+        "wed",
+        "thu",
+        "fri",
+        "sat",
+        "sun"
+      ],
+      "label": "",
+      "on": true,
+      "ring": "every",
+      "time": "07:05",
+      "volume": 100
+    },
+    "offset_secs": 19800,
+    "stamp": {
+      "at": 0,
+      "by": ""
+    },
+    "start_date": "2026-10-21",
+    "written": {
+      "description": "",
+      "dtend": "2026-10-21T07:06:00+05:30",
+      "dtstart": "2026-10-21T07:05:00+05:30",
+      "rrule": "FREQ=DAILY",
+      "summary": "Alarm"
+    }
+  },
+  "event.write.midnight": {
+    "extra": "",
+    "fields": {
+      "days": [
+        "mon",
+        "tue",
+        "wed",
+        "thu",
+        "fri"
+      ],
+      "label": "Wake up",
+      "on": true,
+      "ring": "one",
+      "sound": "dawn",
+      "time": "23:59",
+      "volume": 60
+    },
+    "offset_secs": -18000,
+    "stamp": {
+      "at": 1792500000,
+      "by": "lumashow-black"
+    },
+    "start_date": "2026-12-31",
+    "written": {
+      "description": "volume: 60\nsound: dawn\nring: one\nedited: 1792500000 lumashow-black",
+      "dtend": "2027-01-01T00:00:00-05:00",
+      "dtstart": "2026-12-31T23:59:00-05:00",
+      "rrule": "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR",
+      "summary": "Wake up"
+    }
+  },
+  "event.write.off_with_notes": {
+    "extra": "Remember the keys",
+    "fields": {
+      "days": [
+        "mon",
+        "tue",
+        "wed",
+        "thu",
+        "fri"
+      ],
+      "label": "Wake up",
+      "on": false,
+      "ring": "one",
+      "sound": "dawn",
+      "time": "07:05",
+      "volume": 60
+    },
+    "offset_secs": 0,
+    "stamp": {
+      "at": 1792500000,
+      "by": "lumashow-black"
+    },
+    "start_date": "2026-10-21",
+    "written": {
+      "description": "volume: 60\nsound: dawn\nring: one\nedited: 1792500000 lumashow-black\nRemember the keys",
+      "dtend": "2026-10-21T07:06:00+00:00",
+      "dtstart": "2026-10-21T07:05:00+00:00",
+      "rrule": "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR",
+      "summary": "(off) Wake up"
+    }
+  },
+  "event.write.once": {
+    "extra": "",
+    "fields": {
+      "date": "2026-10-21",
+      "days": [],
+      "label": "Wake up",
+      "on": true,
+      "ring": "one",
+      "sound": "dawn",
+      "time": "07:05",
+      "volume": 60
+    },
+    "offset_secs": -18000,
+    "stamp": {
+      "at": 1792500000,
+      "by": "lumashow-black"
+    },
+    "start_date": "2026-10-21",
+    "written": {
+      "description": "volume: 60\nsound: dawn\nring: one\nedited: 1792500000 lumashow-black",
+      "dtend": "2026-10-21T07:06:00-05:00",
+      "dtstart": "2026-10-21T07:05:00-05:00",
+      "rrule": null,
+      "summary": "Wake up"
+    }
+  },
+  "event.write.series": {
+    "extra": "",
+    "fields": {
+      "days": [
+        "mon",
+        "tue",
+        "wed",
+        "thu",
+        "fri"
+      ],
+      "label": "Wake up",
+      "on": true,
+      "ring": "one",
+      "sound": "dawn",
+      "time": "07:05",
+      "volume": 60
+    },
+    "offset_secs": -14400,
+    "stamp": {
+      "at": 1792500000,
+      "by": "lumashow-black"
+    },
+    "start_date": "2026-10-21",
+    "written": {
+      "description": "volume: 60\nsound: dawn\nring: one\nedited: 1792500000 lumashow-black",
+      "dtend": "2026-10-21T07:06:00-04:00",
+      "dtstart": "2026-10-21T07:05:00-04:00",
+      "rrule": "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR",
+      "summary": "Wake up"
+    }
+  },
+  "from_show.answered": {
+    "body": {
+      "how": "snoozed",
+      "occ": "ls-1@2026-10-21T07:05"
+    },
+    "m": "alarms",
+    "t": "answered"
+  },
+  "from_show.beacon": {
+    "body": {
+      "age": 30,
+      "prio": 2
+    },
+    "m": "alarms",
+    "t": "beacon"
+  },
+  "from_show.delete": {
+    "body": {
+      "expect": 4,
+      "op": 3,
+      "uid": "ls-1"
+    },
+    "m": "alarms",
+    "t": "delete"
+  },
+  "from_show.put": {
+    "body": {
+      "alarm": {
+        "days": [
+          "mon",
+          "tue",
+          "wed",
+          "thu",
+          "fri"
+        ],
+        "label": "Wake up",
+        "on": true,
+        "ring": "one",
+        "sound": "dawn",
+        "time": "07:05",
+        "volume": 60
+      },
+      "at": 1792500000,
+      "expect": 0,
+      "op": 1,
+      "uid": "ls-1"
+    },
+    "m": "alarms",
+    "t": "put"
+  },
+  "from_show.put_once": {
+    "body": {
+      "alarm": {
+        "date": "2026-10-21",
+        "days": [],
+        "label": "Wake up",
+        "on": true,
+        "ring": "one",
+        "sound": "dawn",
+        "time": "07:05",
+        "volume": 60
+      },
+      "at": 5,
+      "expect": 4,
+      "op": 2,
+      "uid": "ls-2"
+    },
+    "m": "alarms",
+    "t": "put"
+  },
+  "from_show.resync": {
+    "body": {},
+    "m": "alarms",
+    "t": "resync"
+  },
+  "to_show.answered": {
+    "body": {
+      "from": "homeassistant",
+      "how": "stopped",
+      "occ": "ls-1@2026-10-21T07:05"
+    },
+    "m": "alarms",
+    "t": "answered"
+  },
+  "to_show.beacon": {
+    "body": {
+      "age": 12,
+      "from": "lumashow-white",
+      "prio": 1
+    },
+    "m": "alarms",
+    "t": "beacon"
+  },
+  "to_show.result_conflict": {
+    "body": {
+      "code": "conflict",
+      "current": {
+        "at": 1792500000,
+        "by": "lumashow-a1b2c3",
+        "days": [
+          "mon",
+          "tue",
+          "wed",
+          "thu",
+          "fri"
+        ],
+        "label": "Wake up",
+        "on": true,
+        "rev": 7,
+        "ring": "one",
+        "sound": "dawn",
+        "time": "07:05",
+        "uid": "ls-1",
+        "volume": 60
+      },
+      "message": "the alarm changed meanwhile",
+      "ok": false,
+      "op": 5,
+      "uid": "ls-1"
+    },
+    "m": "alarms",
+    "t": "result"
+  },
+  "to_show.result_done": {
+    "body": {
+      "ok": true,
+      "op": 4,
+      "rev": 4,
+      "uid": "ls-1"
+    },
+    "m": "alarms",
+    "t": "result"
+  },
+  "to_show.snapshot": {
+    "body": {
+      "alarms": [
+        {
+          "at": 1792500000,
+          "by": "lumashow-a1b2c3",
+          "days": [
+            "mon",
+            "tue",
+            "wed",
+            "thu",
+            "fri"
+          ],
+          "label": "Wake up",
+          "on": true,
+          "rev": 3,
+          "ring": "one",
+          "sound": "dawn",
+          "time": "07:05",
+          "uid": "ls-1",
+          "volume": 60
+        },
+        {
+          "at": 1792500000,
+          "by": "lumashow-a1b2c3",
+          "date": "2026-10-21",
+          "days": [],
+          "label": "Wake up",
+          "on": true,
+          "rev": 1,
+          "ring": "one",
+          "sound": "dawn",
+          "time": "07:05",
+          "uid": "ls-2",
+          "volume": 60
+        }
+      ],
+      "ready": true,
+      "rev": 9,
+      "tz": "America/New_York"
+    },
+    "m": "alarms",
+    "t": "snapshot"
+  },
+  "to_show.snapshot_not_ready": {
+    "body": {
+      "alarms": [],
+      "ready": false,
+      "rev": 10,
+      "tz": "America/New_York"
+    },
+    "m": "alarms",
+    "t": "snapshot"
+  }
+}

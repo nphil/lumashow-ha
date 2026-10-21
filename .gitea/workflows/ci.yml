@@ -1,0 +1,40 @@
+name: ci
+
+# Runs on the maintainer's own Gitea (its Actions), a private mirror of this repository; GitHub runs `.github/workflows/validate.yml` instead.
+# The job is a container that is thrown away when it ends: nothing is left on the runner.
+# The python image carries no Node, so the job uses no JavaScript action: the checkout below is a plain git fetch.
+on:
+  push:
+    branches: [main, public]
+    tags: ["v*"]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    container: python:3.14
+    steps:
+      - name: Check out this commit
+        env:
+          TOKEN: ${{ github.token }}
+          SERVER: ${{ github.server_url }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -eu
+          git init -q .
+          # The token goes through git's environment config, never argv.
+          export GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=http.extraheader GIT_CONFIG_VALUE_0="Authorization: token $TOKEN"
+          git fetch -q --depth 1 "$SERVER/$REPO.git" "$SHA"
+          git checkout -q --detach FETCH_HEAD
+          test "$(git rev-parse HEAD)" = "$SHA"
+      - name: Install
+        run: pip install --no-cache-dir -r requirements_test.txt
+      - name: Lint
+        run: |
+          ruff check .
+          ruff format --check .
+      - name: The two copies of the strings are the same file
+        run: cmp custom_components/lumashow/strings.json custom_components/lumashow/translations/en.json
+      - name: Tests
+        run: pytest -q --timeout=120

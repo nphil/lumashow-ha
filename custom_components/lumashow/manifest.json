@@ -1,0 +1,29 @@
+{
+  "domain": "lumashow",
+  "name": "LumaShow",
+  "after_dependencies": [
+    "esphome",
+    "logbook",
+    "camera",
+    "persistent_notification",
+    "zeroconf"
+  ],
+  "codeowners": [
+    "@nphil"
+  ],
+  "config_flow": true,
+  "dependencies": [
+    "http"
+  ],
+  "documentation": "https://github.com/nphil/lumashow-ha",
+  "integration_type": "device",
+  "iot_class": "local_push",
+  "issue_tracker": "https://github.com/nphil/lumashow-ha/issues",
+  "requirements": [
+    "noiseprotocol>=0.3.1,<1.0"
+  ],
+  "version": "0.1.0",
+  "zeroconf": [
+    "_lumashow._tcp.local."
+  ]
+}

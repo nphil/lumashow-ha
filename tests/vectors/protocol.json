@@ -1,0 +1,192 @@
+{
+  "about": "Protocol vectors of docs/lumashow-ha-protocol.md. The Show side (crates/ha-bridge/tests/vectors.rs) and the integration (lumashow-ha tests/test_vectors.py) decode every one of these; the Show side also writes each message back and must get this exact object. A copy of this file lives in lumashow-ha as tests/vectors/protocol.json: change both together.",
+  "channel_keys": [
+    {
+      "pairing_key_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+      "channel_key_hex": "6345be088b8156ab244278e72b401fb287e90817c28bccd0818d3f4064926b83"
+    },
+    {
+      "pairing_key_hex": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "channel_key_hex": "28100c1bd254391e5b028b72530963b7f34b857b1cf1b8b4617e0301e5a95bea"
+    }
+  ],
+  "messages": [
+    {
+      "name": "hello",
+      "from": "integration",
+      "message": {
+        "m": "core",
+        "t": "hello",
+        "proto": [1],
+        "client": {"name": "lumashow", "version": "0.1.0", "ha_version": "2026.10.0", "instance": "6f1c1ab3", "entry": "01HX0000000000000000000000"},
+        "modules": {"states": 1, "actions": 1, "cameras": 1, "notify": 1}
+      }
+    },
+    {
+      "name": "welcome",
+      "from": "show",
+      "message": {
+        "m": "core",
+        "t": "welcome",
+        "proto": 1,
+        "device": {
+          "name": "lumashow-abcdef",
+          "friendly_name": "LumaShow abcdef",
+          "mac": "AA:BB:CC:DD:EE:FF",
+          "manufacturer": "LumaShow",
+          "model": "Echo Show 5",
+          "sw_version": "v1-test",
+          "display": {"width": 960, "height": 480},
+          "has": {"camera": true, "microphone": true, "speaker": true}
+        },
+        "modules": {"states": 1, "actions": 1, "cameras": 1, "notify": 1},
+        "limits": {"message_bytes": 49152, "entities": 256, "call_entities": 16}
+      }
+    },
+    {"name": "ping", "from": "either", "message": {"m": "core", "t": "ping", "n": 7}},
+    {"name": "pong", "from": "either", "message": {"m": "core", "t": "pong", "n": 7}},
+    {"name": "error", "from": "either", "message": {"m": "core", "t": "error", "code": "bad_message", "message": "a message that is not JSON"}},
+    {"name": "bye", "from": "either", "message": {"m": "core", "t": "bye", "reason": "unloaded"}},
+    {"name": "bye unpaired", "from": "show", "message": {"m": "core", "t": "bye", "reason": "unpaired"}},
+    {
+      "name": "snapshot",
+      "from": "integration",
+      "message": {
+        "m": "states",
+        "t": "snapshot",
+        "rev": 3,
+        "part": 0,
+        "more": false,
+        "policy": {"paused": false, "pin_set": true},
+        "areas": [{"id": "kitchen", "name": "Kitchen"}],
+        "entities": [
+          {
+            "id": "light.kitchen",
+            "name": "Kitchen light",
+            "area": "kitchen",
+            "state": "on",
+            "attrs": {"brightness": 180, "friendly_name": "Kitchen light"},
+            "changed": 1760990000.5,
+            "ctl": ["turn_on", "turn_off", "toggle"]
+          },
+          {"id": "lock.front_door", "name": "Front door", "state": "locked", "minor": true, "ctl": ["lock"], "ctl_pin": ["unlock", "open"]},
+          {"id": "sensor.hall_temperature", "name": "Hall temperature", "state": "21.5", "attrs": {"unit_of_measurement": "°C"}}
+        ]
+      }
+    },
+    {
+      "name": "snapshot, first part of several",
+      "from": "integration",
+      "message": {
+        "m": "states",
+        "t": "snapshot",
+        "rev": 9,
+        "part": 0,
+        "more": true,
+        "policy": {"paused": true, "pin_set": false},
+        "areas": [],
+        "entities": [{"id": "switch.plug", "name": "Plug", "state": "off"}]
+      }
+    },
+    {
+      "name": "update",
+      "from": "integration",
+      "message": {
+        "m": "states",
+        "t": "update",
+        "rev": 4,
+        "entities": [
+          {"id": "light.kitchen", "state": "off", "attrs": {"brightness": 0}, "changed": 1760990001.25},
+          {"id": "sensor.hall_temperature", "state": "unavailable"}
+        ],
+        "removed": ["sensor.gone"]
+      }
+    },
+    {"name": "update, nothing removed", "from": "integration", "message": {"m": "states", "t": "update", "rev": 5, "entities": [{"id": "light.kitchen", "state": "on"}]}},
+    {"name": "resync", "from": "show", "message": {"m": "states", "t": "resync"}},
+    {
+      "name": "call",
+      "from": "show",
+      "message": {"m": "actions", "t": "call", "op": 12, "entity_ids": ["light.kitchen"], "verb": "turn_on", "args": {"brightness_pct": 40}, "origin": "touch"}
+    },
+    {
+      "name": "call, sensitive",
+      "from": "show",
+      "message": {"m": "actions", "t": "call", "op": 13, "entity_ids": ["lock.front_door"], "verb": "unlock", "origin": "touch", "confirmed": true, "pin": "2468"}
+    },
+    {
+      "name": "result",
+      "from": "integration",
+      "message": {"m": "actions", "t": "result", "op": 12, "ok": true, "results": [{"entity_id": "light.kitchen", "ok": true}]}
+    },
+    {
+      "name": "result, refused",
+      "from": "integration",
+      "message": {"m": "actions", "t": "result", "op": 13, "ok": false, "code": "locked_out", "message": "too many wrong PINs"}
+    },
+    {
+      "name": "result, one of two failed",
+      "from": "integration",
+      "message": {
+        "m": "actions",
+        "t": "result",
+        "op": 14,
+        "ok": false,
+        "results": [{"entity_id": "light.a", "ok": true}, {"entity_id": "light.b", "ok": false, "code": "failed"}]
+      }
+    },
+    {
+      "name": "camera list",
+      "from": "integration",
+      "message": {
+        "m": "cameras",
+        "t": "list",
+        "rev": 2,
+        "partial": false,
+        "cameras": [
+          {
+            "id": "camera.porch",
+            "name": "Porch",
+            "area": "hall",
+            "snapshot": {"url": "http://192.168.1.20:8123/api/camera_proxy/camera.porch?authSig=abc.def", "expires": 1760993600},
+            "streams": [{"kind": "rtsp", "url": "rtsp://192.168.1.50:8554/porch"}]
+          },
+          {"id": "camera.garage", "name": "Garage"}
+        ]
+      }
+    },
+    {"name": "camera refresh", "from": "show", "message": {"m": "cameras", "t": "refresh", "ids": ["camera.porch"]}},
+    {
+      "name": "notify snapshot",
+      "from": "integration",
+      "message": {
+        "m": "notify",
+        "t": "snapshot",
+        "items": [{"id": "n1", "title": "Low battery", "message": "Door sensor", "level": "warning", "source": "persistent_notification"}]
+      }
+    },
+    {
+      "name": "notify post",
+      "from": "integration",
+      "message": {"m": "notify", "t": "post", "id": "service-1", "title": "Kitchen", "message": "Dinner is ready", "level": "info", "source": "service", "ttl_s": 3600}
+    },
+    {"name": "notify clear", "from": "integration", "message": {"m": "notify", "t": "clear", "id": "n1"}},
+    {"name": "notify dismissed", "from": "show", "message": {"m": "notify", "t": "dismissed", "id": "n1"}},
+    {"name": "a reserved module", "from": "either", "message": {"m": "alarms", "t": "snapshot", "rev": 1, "alarms": []}}
+  ],
+  "tolerated": [
+    {"name": "a field nobody knows yet", "text": "{\"m\":\"core\",\"t\":\"ping\",\"n\":1,\"future\":{\"x\":[1,2]}}", "module": "core", "kind": "ping"},
+    {"name": "a kind nobody knows yet", "text": "{\"m\":\"states\",\"t\":\"soon\",\"rev\":1}", "module": "states", "kind": "soon"},
+    {"name": "a module nobody knows yet", "text": "{\"m\":\"holograms\",\"t\":\"show\"}", "module": "holograms", "kind": "show"}
+  ],
+  "refused": [
+    {"name": "not JSON", "text": "{\"m\":\"core\""},
+    {"name": "not an object", "text": "[1,2,3]"},
+    {"name": "a bare string", "text": "\"hello\""},
+    {"name": "no module", "text": "{\"t\":\"ping\",\"n\":1}"},
+    {"name": "no kind", "text": "{\"m\":\"core\",\"n\":1}"},
+    {"name": "the module is not a string", "text": "{\"m\":1,\"t\":\"ping\"}"},
+    {"name": "the kind is not a string", "text": "{\"m\":\"core\",\"t\":null}"},
+    {"name": "nothing", "text": ""}
+  ]
+}

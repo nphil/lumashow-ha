@@ -1,0 +1,36 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "connected": {
+        "default": "mdi:lan-disconnect",
+        "state": {
+          "on": "mdi:lan-connect"
+        }
+      }
+    },
+    "sensor": {
+      "entities_shared": {
+        "default": "mdi:format-list-checks"
+      },
+      "last_push": {
+        "default": "mdi:arrow-up-bold-circle-outline"
+      },
+      "actions": {
+        "default": "mdi:gesture-tap"
+      }
+    },
+    "switch": {
+      "pause_control": {
+        "default": "mdi:pause-octagon-outline",
+        "state": {
+          "on": "mdi:pause-octagon"
+        }
+      }
+    },
+    "notify": {
+      "message": {
+        "default": "mdi:message-text-outline"
+      }
+    }
+  }
+}
