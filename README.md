@@ -31,9 +31,9 @@ Without HACS: copy the folder `custom_components/lumashow` of the [latest releas
 
 ## Pair the Show (once)
 
-1. **On the Show:** *Settings › Sound › Voice*. Turn the voice switch on (the pairing row is there only while it is on), touch **Pair with Home Assistant** and confirm. A window of five minutes opens.
-2. **In Home Assistant**, within the five minutes: *Settings › Devices & services*. The Show is offered as a discovered **ESPHome** device: press **Add**. Home Assistant makes the key itself and hands it to the Show. That is the only pairing there is.
-3. The Show now also appears as **Discovered: LumaShow ...**: press **Add**. The key is taken from the Show's ESPHome device; nothing is typed. (If it does not appear: *Add integration › LumaShow* and give the Show's address. The key is asked for only if there is no ESPHome device for that Show.)
+1. **On the Show:** *Settings › Home Assistant*, touch **Pair with Home Assistant** and confirm. A window of five minutes opens. (The Show's voice does not need to be on, and stays off: while the window is open the Show listens for Home Assistant alone, no microphone, and stops listening when it shuts.)
+2. **In Home Assistant**, within the five minutes: *Settings › Devices & services*. The Show is offered as a discovered **ESPHome** device: press **Add**. Home Assistant makes the key itself and hands it to the Show. That is the only pairing there is. (With the voice off, Home Assistant's ESPHome entry for the Show can then show the device as unavailable: that is only its voice side, which needs the voice on, and nothing here needs it.)
+3. A moment later the Show also appears as **Discovered: LumaShow ...**: press **Add**. The key is taken from the Show's ESPHome device; nothing is typed. (If it does not appear: *Add integration › LumaShow* and give the Show's address. The key is asked for only if there is no ESPHome device for that Show.)
 
 ## Pick what the Show is given
 
@@ -86,7 +86,7 @@ One device per Show (under the same device page as its ESPHome entry), with:
 | Stop all actions now | Turn on the Show's **Pause control** switch. | The Show can still look; nothing it asks for is done. |
 | Stop sharing one thing | *Configure › Edit the list*, take it off, *Save*. | The Show drops it at once. |
 | Cut the Show off | *Settings › Devices & services › LumaShow*, the three dots, **Disable** (or **Delete**). | Home Assistant tells the Show goodbye and closes; the Show clears everything it was given. Enable the entry again to reconnect. |
-| Take its key away for good | On the Show: *Settings › Sound › Voice › Forget Home Assistant*; then delete the Show's ESPHome device in Home Assistant. | The Show drops its key, ends the connection at once and lets nobody in until it is paired again with a **new** key. The old key opens nothing. |
+| Take its key away for good | On the Show: *Settings › Home Assistant › Forget Home Assistant*; then delete the Show's ESPHome device in Home Assistant. | The Show drops its key, ends the connection at once and lets nobody in until it is paired again with a **new** key. The old key opens nothing. |
 | Remove LumaShow | Delete the entry, then HACS › LumaShow › the three dots › **Remove**, and restart. | Nothing of it is left running. |
 
 If the Show is ever paired again the entry says it needs you to **Reauthenticate**: press it; the new key is read from the Show's ESPHome device.
