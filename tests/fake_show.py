@@ -110,22 +110,36 @@ class FakeShow:
         self.port = 0
         self._server: asyncio.Server | None = None
         self._tasks: set[asyncio.Task[None]] = set()
+        self._stopping = False
 
     async def start(self) -> int:
-        self._server = await asyncio.start_server(self._serve, "127.0.0.1", 0)
+        self._server = await asyncio.start_server(self._accept, "127.0.0.1", 0)
         self.port = self._server.sockets[0].getsockname()[1]
         return self.port
 
+    def _accept(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
+        # A connection that was being accepted when the server closed is still made a step or two later, in the middle of `stop()` (the integration
+        # reconnecting as a test ends): it is refused, and nothing is served that `stop()` would not see. (A coroutine callback would also be started
+        # by the stream protocol a step after the connection is made, so that its task was not in `_tasks` yet when `stop()` looked.)
+        if self._stopping:
+            writer.close()
+            return
+        task = asyncio.get_running_loop().create_task(self._serve(reader, writer))
+        self._tasks.add(task)
+        task.add_done_callback(self._tasks.discard)
+
     async def stop(self) -> None:
-        # No new connection from here on (a reconnect during the teardown would leave a task nobody cancels), then the open ones are closed:
-        # Python 3.12+ waits for every connection in `wait_closed`, whoever still holds them.
+        # No new connection from here on, then the open ones are closed: Python 3.12+ waits for every connection in `wait_closed`, whoever still holds them.
+        self._stopping = True
         if self._server:
             self._server.close()
         for session in self.sessions:
             session.writer.close()
-        for task in list(self._tasks):
-            task.cancel()
-        await asyncio.gather(*self._tasks, return_exceptions=True)
+        while self._tasks:
+            tasks = list(self._tasks)
+            for task in tasks:
+                task.cancel()
+            await asyncio.gather(*tasks, return_exceptions=True)
         if self._server:
             with contextlib.suppress(TimeoutError):
                 async with asyncio.timeout(2):
@@ -142,9 +156,6 @@ class FakeShow:
         return self.sessions[count - 1]
 
     async def _serve(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
-        task = asyncio.current_task()
-        assert task is not None
-        self._tasks.add(task)
         try:
             await self._handle(reader, writer)
         except (asyncio.IncompleteReadError, ConnectionError, asyncio.CancelledError):
@@ -152,7 +163,6 @@ class FakeShow:
         finally:
             with contextlib.suppress(Exception):
                 writer.close()
-            self._tasks.discard(task)
 
     async def _handle(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
         await _read_frame(reader)  # the client's (empty) hello
