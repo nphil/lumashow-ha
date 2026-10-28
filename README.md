@@ -63,7 +63,7 @@ At most 256 entities per Show.
 | Camera pictures | A temporary signed address (valid for an hour) for each shared camera. The camera's stream address, which can contain a password, is **not** sent unless you turn it on. |
 | Home Assistant's own notifications | **Off.** |
 | Alarms | **Off** (see below). |
-| Camera events | **Off**. On: a shared camera's detectors (person, vehicle, animal, package, doorbell, motion) are sent as they happen, so a LumaTV can show who is at the door over whatever is playing. |
+| Camera events and live streams | **Off**. On (*Send camera events*): a shared camera's detectors (person, vehicle, animal, package, doorbell, motion) are sent as they happen, so a LumaTV can show who is at the door over whatever is playing; and a device with a video decoder may ask for a shared camera's live stream, which Home Assistant relays from its own go2rtc (or serves as HLS). The device never sees the camera's address or password. |
 | Pace | 10 actions in 10 seconds, then refused. |
 | Audit | Every action is in the Logbook and in the event `lumashow_action`, and counted. |
 
@@ -116,9 +116,9 @@ An alarm made on one Show is then on the others, and you can make or change one 
 - *Nothing happens when you tap something on the Show*: *Logbook*, look for *"<Show>: ..."* lines. A refused action says why (not shared, read-only, paused, too many at once, not one of the Show's actions, needs a PIN).
 - *Diagnostics* (the entry's three dots) are safe to attach to a bug report: the key and the PIN are removed.
 
-## Not in 0.1.0
+## Not in 0.2.0
 
-The PIN pad and confirmation on the Show (until it has one, sensitive actions cannot be made from the Show), the media, presence and intercom modules (the protocol reserves their names), and the camera wall's use of the camera list.
+The PIN pad and confirmation on the Show (until it has one, sensitive actions cannot be made from the Show), the media, presence and intercom modules (the protocol reserves their names), the camera wall's use of the camera list, and audio on the relayed camera stream.
 
 ## Development
 

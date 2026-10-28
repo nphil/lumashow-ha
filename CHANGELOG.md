@@ -1,13 +1,19 @@
 # Changelog
 
-## Unreleased
+## 0.2.0
+
+For a LumaTV (the LG TV shell) as one more LumaShow device: camera events and live camera streams. Both are **off for every device** until
+*Send camera events* is ticked on that device's entry; a Show that does not ask for these modules is never sent them.
 
 - **Camera events** (module `camera_events`, protocol §10b): what a shared camera's detectors see (a person, a vehicle, an animal, a package, a doorbell ring, motion) is sent to the
   device as it happens, for a pop-up on a LumaTV or a card on a Show. The detectors are the camera's own (the `binary_sensor` and `event` entities of its device, and an `event` entity
   elsewhere that names the camera); nothing of an entity the device could not already see is sent. Two sightings of one kind within 2 s are one event.
-- **Camera live streams** (module `camera_live`, protocol §10c): a device with a video decoder (a LumaTV) asks for a shared camera's stream and gets Home Assistant's
-  own HLS of it (the stream integration pulls the camera; the device never sees the camera's address or password). Offered with *Send camera events*.
-- Option per device: **Send camera events** (off by default; *Configure › Notifications, cameras and alarms*). Nothing runs for it while no device shares them.
+- **Camera live streams** (module `camera_live`, protocol §10c): a device with a video decoder (a LumaTV) asks for a shared camera's stream and gets it one of two ways, without ever
+  seeing the camera's address or password. The **relay**: Home Assistant's own go2rtc restreams the camera on the loopback, the integration reads that restream inside Home Assistant and
+  sends the pictures to the device over the paired channel (binary frames; sub-second; the cost on Home Assistant is copying packets). Else **HLS**: Home Assistant's stream integration
+  serves the camera at a tokened address the device fetches (a few seconds behind). The relay needs the go2rtc Home Assistant runs itself.
+- Option per device: **Send camera events** (off by default; *Configure › Notifications, cameras and alarms*), which offers both modules. Nothing runs for them while no device shares them.
+- Transport: a frame type other than the message type is a binary module's (type 2 is the relay's); the device says which it takes.
 
 ## 0.1.0
 

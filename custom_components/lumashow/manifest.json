@@ -6,7 +6,8 @@
     "logbook",
     "camera",
     "persistent_notification",
-    "zeroconf"
+    "zeroconf",
+    "go2rtc"
   ],
   "codeowners": [
     "@nphil"
@@ -22,7 +23,7 @@
   "requirements": [
     "noiseprotocol>=0.3.1,<1.0"
   ],
-  "version": "0.1.0",
+  "version": "0.2.0",
   "zeroconf": [
     "_lumashow._tcp.local."
   ]
