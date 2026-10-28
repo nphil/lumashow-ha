@@ -22,7 +22,7 @@ Words: *the Show* is the server (it listens), *the integration* is the client (i
 | Roles | The integration dials; the Show never dials out. One authenticated session at a time: a new one replaces the old (the old is sent `bye` with reason `replaced`). At most 4 connections that have not finished the handshake and `hello`; each has 10 s. |
 
 Inside a Noise transport frame the plaintext is `type: u16 BE`, `length: u16 BE`, then `length` bytes. **Type 1** is a message (a JSON
-object). Every other type is reserved for binary modules and is ignored (never an error). A message is at most **48 KiB**.
+object). Every other type is a binary module's (type 2: `camera_live`'s relay, §10c); a type the other end does not claim is ignored (never an error). A message is at most **48 KiB**.
 
 ## 2. The envelope and the rules of extension
 
