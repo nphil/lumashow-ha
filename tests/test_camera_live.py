@@ -96,3 +96,137 @@ async def test_a_device_asks_through_the_channel_and_is_answered(hass: HomeAssis
         await session.send({"m": "camera_live", "t": "stop", "camera": CAMERA})
     finally:
         await fake.stop()
+
+
+async def test_the_relay_is_preferred_and_carries_whole_pictures_with_sub_second_latency(hass: HomeAssistant, socket_enabled: None) -> None:
+    """The device asks for relay then hls; go2rtc's restream (the fake) is read inside Home Assistant and every picture reaches the device as
+    binary frames, whole, in order, with its timestamp, within a few milliseconds of leaving the source; a stop tears the restream down."""
+    import asyncio
+
+    from custom_components.lumashow.camera_live import FLAG_FIRST, FLAG_KEY, FLAG_LAST, FRAME_RELAY, HEADER
+
+    from .fake_rtsp import FakeRtsp
+
+    hass.config.internal_url = "http://192.0.2.10:8123"
+    source = FakeRtsp(pace=1 / 30, loop_forever=True)
+    await source.start()
+    fake = FakeShow(PAIRING_KEY, modules={"states": 1, "cameras": 1, "camera_events": 1, "camera_live": 1})
+    await fake.start()
+    config = MockConfigEntry(
+        domain=DOMAIN, title="Living Room TV", unique_id=MAC, data=entry_data(fake.port), options={OPT_ENTITIES: [CAMERA], OPT_CAMERA_EVENTS: True}
+    )
+    config.add_to_hass(hass)
+    hass.states.async_set(CAMERA, "idle", {"friendly_name": "Front door"})
+    try:
+        await setup(hass, config)
+        session = await fake.wait_session()
+        await session.wait_kind("cameras", "list")
+        with patch.object(CameraLiveModule, "_relay_source", return_value=source.url):
+            await session.send({"m": "camera_live", "t": "start", "op": 3, "camera": CAMERA, "formats": ["relay", "hls"]})
+            started = await session.wait_kind("camera_live", "started")
+        assert started["kind"] == "relay" and started["codec"] == "h264" and started["clock"] == 90000 and started["stream"] >= 1
+        import base64
+
+        assert base64.b64decode(started["parameter_sets"]) == b"\x00\x00\x00\x01" + source.sps + b"\x00\x00\x00\x01" + source.pps
+        loop = asyncio.get_running_loop()
+        # 40 pictures: more than one pass of the two-second fixture, so a repeated timestamp is seen handled
+        pictures: list[tuple[int, bytes, float]] = []
+        chunks: list[bytes] = []
+        seen = 0
+        async with asyncio.timeout(10):
+            while len(pictures) < 40:
+                frames = await session.wait_binary(seen + 1)
+                for kind, payload in frames[seen:]:
+                    assert kind == FRAME_RELAY
+                    stream, flags, seq, ts = (
+                        int.from_bytes(payload[:2], "big"),
+                        payload[2],
+                        int.from_bytes(payload[4:8], "big"),
+                        int.from_bytes(payload[8:12], "big"),
+                    )
+                    assert stream == started["stream"] and seq == len(frames[: frames.index((kind, payload))]) + 1
+                    if flags & FLAG_FIRST:
+                        chunks = []
+                    chunks.append(payload[HEADER:])
+                    if flags & FLAG_LAST:
+                        pictures.append((ts, b"".join(chunks), loop.time() - source.sent_at[ts]))
+                        if flags & FLAG_KEY:
+                            assert b"\x00\x00\x00\x01" + source.sps in pictures[-1][1]
+                seen = len(frames)
+        # the pictures are the source's, in order, whole
+        for i, (ts, data, _) in enumerate(pictures[:30]):
+            unit = source.units[i]
+            assert data == b"".join(b"\x00\x00\x00\x01" + n for n in unit), f"picture {i} differs"
+            assert ts == i * 6000
+        latencies = sorted(p[2] for p in pictures)
+        assert latencies[len(latencies) // 2] < 0.05, latencies
+        assert latencies[-1] < 0.5, latencies
+        assert session.kinds("camera_live", "ended") == []
+        await session.send({"m": "camera_live", "t": "stop", "camera": CAMERA})
+        async with asyncio.timeout(3):
+            await source.torn_down.wait()
+        assert "TEARDOWN" in source.requests
+    finally:
+        await fake.stop()
+        await source.stop()
+
+
+async def test_a_relay_that_cannot_be_opened_falls_back_to_hls_and_a_stream_that_ends_tells_the_device(
+    hass: HomeAssistant, socket_enabled: None
+) -> None:
+    import asyncio
+
+    from .fake_rtsp import FakeRtsp
+
+    hass.config.internal_url = "http://192.0.2.10:8123"
+    module = CameraLiveModule(hass)
+    hub = FakeHub({CAMERA: "Front door"})
+    await module.async_session(hub, True)  # type: ignore[arg-type]
+    # no go2rtc of Home Assistant's own: relay refused, hls given
+    with patch("homeassistant.components.camera.async_request_stream", return_value="/api/hls/tok/master_playlist.m3u8"):
+        await module.async_message(hub, "start", {"op": 1, "camera": CAMERA, "formats": ["relay", "hls"]})  # type: ignore[arg-type]
+    assert hub.sent[-1][0] == "started" and hub.sent[-1][1]["kind"] == "hls"
+    # relay only, and nothing to relay from: refused in words naming the way
+    await module.async_message(hub, "start", {"op": 2, "camera": CAMERA, "formats": ["relay"]})  # type: ignore[arg-type]
+    assert (
+        hub.sent[-1][0] == "failed"
+        and hub.sent[-1][1]["code"] == "no_stream"
+        and hub.sent[-1][1]["message"] == "Home Assistant's own go2rtc is not running"
+    )
+    # a restream that goes away ends the relay and the device hears it
+    source = FakeRtsp(pace=0.001)
+    await source.start()
+    fake = FakeShow(PAIRING_KEY, modules={"states": 1, "cameras": 1, "camera_events": 1, "camera_live": 1})
+    await fake.start()
+    config = MockConfigEntry(
+        domain=DOMAIN, title="Living Room TV", unique_id=MAC, data=entry_data(fake.port), options={OPT_ENTITIES: [CAMERA], OPT_CAMERA_EVENTS: True}
+    )
+    config.add_to_hass(hass)
+    hass.states.async_set(CAMERA, "idle", {"friendly_name": "Front door"})
+    try:
+        await setup(hass, config)
+        session = await fake.wait_session()
+        await session.wait_kind("cameras", "list")
+        with patch.object(CameraLiveModule, "_relay_source", return_value=source.url):
+            await session.send({"m": "camera_live", "t": "start", "op": 3, "camera": CAMERA, "formats": ["relay"]})
+            started = await session.wait_kind("camera_live", "started")
+        ended = await session.wait_kind("camera_live", "ended", timeout=10)
+        assert ended["stream"] == started["stream"] and ended["camera"] == CAMERA and ended["reason"] == "the stream ended"
+        last = [p for k, p in session.binary if p[2] & 2]
+        assert len(last) == 30
+        # the device may ask again at once
+        source2 = FakeRtsp(pace=0.001, loop_forever=True)
+        await source2.start()
+        try:
+            with patch.object(CameraLiveModule, "_relay_source", return_value=source2.url):
+                await session.send({"m": "camera_live", "t": "start", "op": 4, "camera": CAMERA, "formats": ["relay"]})
+                again = await session.wait(lambda m: m["m"] == "camera_live" and m["t"] == "started" and m["op"] == 4)
+            assert again["stream"] == started["stream"] + 1
+            await session.send({"m": "camera_live", "t": "stop", "camera": CAMERA})
+            async with asyncio.timeout(3):
+                await source2.torn_down.wait()
+        finally:
+            await source2.stop()
+    finally:
+        await fake.stop()
+        await source.stop()

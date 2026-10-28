@@ -418,6 +418,18 @@ class Hub:
         # Not `message(module, kind, **fields)`: a module's field may be named `kind` too (a camera event's).
         return await self._send({**fields, "m": module, "t": kind})
 
+    async def async_send_binary(self, kind: int, payload: bytes) -> bool:
+        """Sends one binary frame (a module's own type, never the message type) in the session that is open now; ``False`` when none."""
+        channel = self._channel
+        if channel is None or not self.connected or kind == 1:
+            return False
+        try:
+            await channel.send_frame(kind, payload)
+        except (ChannelError, ProtocolError) as err:
+            _LOGGER.debug("%s: could not send a frame: %s", self.name, err)
+            return False
+        return True
+
     def spawn_module_send(self, module: str, kind: str, fields: Mapping[str, Any]) -> None:
         """``async_send_module`` from a callback (a state change): the send is a task of the entry's."""
         if module in MODULES or module not in self.agreed:

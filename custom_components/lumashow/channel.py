@@ -31,6 +31,8 @@ from .protocol import (
 )
 
 PREAMBLE: Final = 0x01
+# The transport's frame length is two bytes; a Noise message adds 16 bytes of tag and the plaintext four of header.
+MAX_FRAME_PAYLOAD: Final = 65535 - 16 - 4
 PLAIN_PREAMBLE: Final = 0x00
 HELLO_FRAME: Final = b"\x01\x00\x00"
 HANDSHAKE_MAC_FAILURE: Final = "Handshake MAC failure"
@@ -162,7 +164,13 @@ class Channel:
     async def send(self, message: Message) -> None:
         """Sends one message. Raises ``ChannelError`` when the connection is gone, ``ProtocolError`` for a message too long."""
         payload = encode(message)
-        plain = FRAME_JSON.to_bytes(2, "big") + len(payload).to_bytes(2, "big") + payload
+        await self.send_frame(FRAME_JSON, payload)
+
+    async def send_frame(self, kind: int, payload: bytes) -> None:
+        """Sends one frame of ``kind`` (the message type, or a binary module's): at most ``MAX_FRAME_PAYLOAD`` bytes."""
+        if kind != FRAME_JSON and len(payload) > MAX_FRAME_PAYLOAD:
+            raise ProtocolError("a binary frame longer than the transport allows")
+        plain = kind.to_bytes(2, "big") + len(payload).to_bytes(2, "big") + payload
         async with self._write_lock:
             if self.closed:
                 raise ChannelError("the channel is closed")

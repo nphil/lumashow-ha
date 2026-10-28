@@ -52,6 +52,7 @@ class FakeSession:
         self.writer = writer
         self.noise = noise
         self.received: list[dict[str, Any]] = []
+        self.binary: list[tuple[int, bytes]] = []
         self.closed = asyncio.Event()
         self._changed = asyncio.Event()
 
@@ -80,6 +81,16 @@ class FakeSession:
 
     async def wait_kind(self, module: str, kind: str, timeout: float = 3.0) -> dict[str, Any]:
         return await self.wait(lambda m: m["m"] == module and m["t"] == kind, timeout)
+
+    async def wait_binary(self, count: int, timeout: float = 5.0) -> list[tuple[int, bytes]]:
+        """At least ``count`` binary frames received (now or later)."""
+        async with asyncio.timeout(timeout):
+            while len(self.binary) < count:
+                self._changed.clear()
+                if len(self.binary) >= count:
+                    break
+                await self._changed.wait()
+        return list(self.binary)
 
     async def wait_closed(self, timeout: float = 3.0) -> None:
         async with asyncio.timeout(timeout):
@@ -190,6 +201,8 @@ class FakeShow:
                 frame = await _read_frame(reader)
                 plain = noise.decrypt(frame)
                 if int.from_bytes(plain[:2], "big") != FRAME_JSON:
+                    session.binary.append((int.from_bytes(plain[:2], "big"), plain[4 : 4 + int.from_bytes(plain[2:4], "big")]))
+                    session._changed.set()
                     continue
                 message = decode(plain[4 : 4 + int.from_bytes(plain[2:4], "big")])
                 session._got(message)

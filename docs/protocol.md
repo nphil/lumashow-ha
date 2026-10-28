@@ -236,18 +236,34 @@ The camera's picture is the one `cameras.list` already gave (`snapshot.url`): a 
 
 ## 10c. `camera_live` (module version 1)
 
-A shared camera's live stream for a device with a video decoder (a LumaTV), **without the camera's own address or password**. The device
-asks; the integration asks Home Assistant's stream integration, which pulls the camera's stream itself and serves it as low-latency HLS of
-fragmented MP4 at a tokened address on Home Assistant's own port; the device fetches that from the home network and plays it. The stream
-stops by itself once nothing fetches it (Home Assistant's idle rule). **Offered with *Send camera events*** (the same option), only while the
-device registered a handler, and only for cameras of the shared set.
+A shared camera's live stream for a device with a video decoder (a LumaTV), **without the camera's own address or password**. Two ways,
+the device naming the ones it can take in `start.formats` (preferred first) and the integration giving the first it can:
+
+- **`relay`** (low latency): Home Assistant's own go2rtc restreams the camera over RTSP on the loopback; the integration reads that
+  restream inside Home Assistant (RTP over TCP, the H.264 or H.265 access units put back together) and relays the access units to the
+  device over this channel as **binary frames of type 2**, whole and in order, with the RTP timestamp. Nothing is opened on Home
+  Assistant, the camera's address stays inside, the cost is copying packets. The device feeds them to its decoder as they arrive, so the
+  latency is the camera's and the decoder's, not a segment's (measured in the integration's tests: under 50 ms from the restream to the
+  channel for the median picture). One relay per device at a time; `stop` ends it, and a restream that ends is reported with `ended`.
+  Only with the go2rtc Home Assistant runs itself (not an external one, whose RTSP port the integration does not know).
+- **`hls`**: the integration asks Home Assistant's stream integration, which pulls the camera's stream itself and serves it as
+  low-latency HLS of fragmented MP4 at a tokened address on Home Assistant's own port; the device fetches that from the home network
+  and plays it, a few seconds behind. The stream stops by itself once nothing fetches it (Home Assistant's idle rule).
+
+**Offered with *Send camera events*** (the same option), only while the device registered a handler, and only for cameras of the shared set.
 
 | Message | Direction | Fields |
 |---|---|---|
-| `start` | device → integration | `op`, `camera` (an entity of `cameras.list`), `format` (`hls`; the only one in version 1). |
-| `started` | integration → device | `op`, `camera`, `kind` (`hls`), `url` (the playlist's address at Home Assistant's internal URL). |
-| `failed` | integration → device | `op`, `camera`, `code` (`bad_args`, `not_allowed`, `no_stream`, `unavailable`, `failed`), `message`. |
-| `stop` | device → integration | `camera`: the device is done with the stream (informational; the stream ends by itself when it is no longer fetched). |
+| `start` | device → integration | `op`, `camera` (an entity of `cameras.list`), `formats` (a list of `relay`, `hls`, preferred first; `format` with one name is the older spelling and still read). |
+| `started` | integration → device | `op`, `camera`, `kind`. For `hls`: `url` (the playlist's address at Home Assistant's internal URL). For `relay`: `stream` (the number its frames carry), `codec` (`h264`, `h265`), `clock` (90000), `parameter_sets` (the SDP's parameter sets in Annex B, base64; may be empty when they only come in-band). |
+| `failed` | integration → device | `op`, `camera`, `code` (`bad_args`, `not_allowed`, `no_stream`, `unavailable`, `failed`), `message` (with several formats asked, each way's reason). |
+| `stop` | device → integration | `camera`: the device is done with the stream (ends a relay; an HLS stream ends by itself when it is no longer fetched). |
+| `ended` | integration → device | `camera`, `stream`, `reason`: the relay ended on its own (the restream stopped, the connection went quiet). |
+
+A relay frame (type 2) is a 12-byte header and at most 60000 bytes of the access unit: `stream` (2 bytes, big endian), `flags` (1 byte:
+1 first chunk of the unit, 2 last chunk, 4 the unit holds a key picture), a reserved byte (0), `seq` (4 bytes, rising by one per frame; a
+gap means a frame was lost and the unit is to be dropped), `timestamp` (4 bytes, the RTP timestamp at `clock` ticks per second, wrapping).
+The access unit is Annex B (`00 00 00 01` before every NAL unit); a key picture's unit carries its parameter sets before the picture.
 
 ## 11. Who decides what (the rules both ends must keep)
 
