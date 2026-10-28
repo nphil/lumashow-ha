@@ -137,12 +137,14 @@
         "data": {
           "forward_notifications": "Show Home Assistant's notifications on the Show",
           "share_streams": "Share camera addresses with the Show",
-          "share_alarms": "Share alarms with the Show"
+          "share_alarms": "Share alarms with the Show",
+          "camera_events": "Send camera events to the device"
         },
         "data_description": {
           "forward_notifications": "Persistent notifications (a low battery, a leak sensor) appear in the Show's notifications. Off by default.",
           "share_streams": "The Show always gets a temporary address for each shared camera's picture. This also gives it the camera's stream address, which can contain a password. Off by default.",
-          "share_alarms": "The Show gets the alarms of the calendar named LumaShow alarms (calendar.lumashow_alarms) and can add, change and delete them; Shows that share alarms keep each other's alarms in step. Off by default."
+          "share_alarms": "The Show gets the alarms of the calendar named LumaShow alarms (calendar.lumashow_alarms) and can add, change and delete them; Shows that share alarms keep each other's alarms in step. Off by default.",
+          "camera_events": "What the shared cameras' detectors see (a person, a vehicle, an animal, a package, a doorbell ring, motion) is sent as it happens, for a pop-up on a TV or a card on a Show. Only cameras in the shared list; nothing of a detector the device could not already see. Off by default."
         }
       }
     },

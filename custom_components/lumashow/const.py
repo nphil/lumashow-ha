@@ -36,6 +36,7 @@ OPT_PIN_SALT: Final = "pin_salt"
 OPT_FORWARD_NOTIFICATIONS: Final = "forward_notifications"  # Home Assistant's persistent notifications
 OPT_SHARE_STREAMS: Final = "share_streams"  # camera addresses (may carry a password)
 OPT_SHARE_ALARMS: Final = "share_alarms"  # the alarm clocks: the Show gets and writes the alarms calendar
+OPT_CAMERA_EVENTS: Final = "camera_events"  # what the shared cameras' detectors see (person, vehicle, animal, doorbell), as it happens
 
 # Rules (protocol §11).
 RATE_CALLS: Final = 10

@@ -214,6 +214,26 @@ otherwise the answer is `conflict` with the alarm as it is now and the Show merg
 **The relay.** A Show's `beacon` and `answered` go to every *other* Show that shares alarms, with `from` set by the integration. An `answered` is also fired as the Home Assistant event
 `lumashow_alarm` (`kind: "answered"`, `from`, `occ`, `how`), so that an automation can ring what the Shows cannot (a speaker, a phone) when nobody answered. Beacons are not events.
 
+## 10b. `camera_events` (module version 1)
+
+What a shared camera's detectors see, as it happens, for a device that shows a pop-up over whatever is playing (a LumaTV) or a card. **Offered only when the
+person turned on *Send camera events* for that device** (an option of its entry; off by default), and only while the device registered a handler. The
+integration owns the mapping from detectors to cameras, so a device never sees a detector entity the person did not share, and needs no registry.
+
+- **Sources.** For each camera of the shared set: the `binary_sensor` and `event` entities of the camera entity's own device whose name or class says what they
+  detect (`custom_components/lumashow/camera_events.py`, `classify`), and `event` entities elsewhere whose `camera` attribute is the camera's name. Hidden and
+  disabled entities never count. The kinds are `person`, `vehicle`, `animal`, `package`, `doorbell` and `motion`; an event entity that announces several classes
+  (`event_type` `person`, `vehicle`, ...) is read at each event.
+- **One event, once.** A binary sensor fires when it turns on, an event entity when it has a new moment; two of one camera and one kind within 2 s are one event.
+
+| Message | Direction | Fields |
+|---|---|---|
+| `list` | integration → device | `cameras`: [`id` (the camera entity), `kinds` (the kinds its detectors can announce, in the order above)]. Sent when the module's session begins and when the shared set changes. |
+| `event` | integration → device | `camera` (the camera entity, one of `cameras.list`), `kind`, `at` (seconds since the epoch of the detection), `source` (the detector entity), `label` (optional, at most 64 characters: what the detector called it, a species or a class). |
+| `refresh` | device → integration | asks for `list` again. |
+
+The camera's picture is the one `cameras.list` already gave (`snapshot.url`): a device fetches it when an event arrives and shows it with the words.
+
 ## 11. Who decides what (the rules both ends must keep)
 
 1. The **integration** decides every action: entity shared with this Show, control allowed, verb in §6, args in range, not paused, rate limit (10 calls in 10 s per Show), sensitive rules.

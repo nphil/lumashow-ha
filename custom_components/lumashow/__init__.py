@@ -12,6 +12,8 @@ from homeassistant.core import Event, HomeAssistant
 
 from .alarms import MODULE as ALARMS
 from .alarms import AlarmsModule
+from .camera_events import MODULE as CAMERA_EVENTS
+from .camera_events import CameraEventsModule
 from .hub import Hub, module_handlers
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.NOTIFY, Platform.SENSOR, Platform.SWITCH]
@@ -23,6 +25,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: LumaShowConfigEntry) -> 
     """Starts the hub (it connects by itself, and again whenever the Show is not there) and the entities."""
     # The owner of module `alarms` (the alarm clocks of several Shows): one for every Show; it runs only while a Show shares alarms.
     module_handlers(hass).setdefault(ALARMS, AlarmsModule(hass))
+    # The owner of module `camera_events` (what a shared camera's detectors see, for a pop-up): runs only while a device shares them.
+    module_handlers(hass).setdefault(CAMERA_EVENTS, CameraEventsModule(hass))
     hub = Hub(hass, entry)
     await hub.async_start()
     entry.runtime_data = hub

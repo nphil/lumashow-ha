@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- **Camera events** (module `camera_events`, protocol §10b): what a shared camera's detectors see (a person, a vehicle, an animal, a package, a doorbell ring, motion) is sent to the
+  device as it happens, for a pop-up on a LumaTV or a card on a Show. The detectors are the camera's own (the `binary_sensor` and `event` entities of its device, and an `event` entity
+  elsewhere that names the camera); nothing of an entity the device could not already see is sent. Two sightings of one kind within 2 s are one event.
+- Option per device: **Send camera events** (off by default; *Configure › Notifications, cameras and alarms*). Nothing runs for it while no device shares them.
+
 ## 0.1.0
 
 The first version.

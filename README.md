@@ -63,6 +63,7 @@ At most 256 entities per Show.
 | Camera pictures | A temporary signed address (valid for an hour) for each shared camera. The camera's stream address, which can contain a password, is **not** sent unless you turn it on. |
 | Home Assistant's own notifications | **Off.** |
 | Alarms | **Off** (see below). |
+| Camera events | **Off**. On: a shared camera's detectors (person, vehicle, animal, package, doorbell, motion) are sent as they happen, so a LumaTV can show who is at the door over whatever is playing. |
 | Pace | 10 actions in 10 seconds, then refused. |
 | Audit | Every action is in the Logbook and in the event `lumashow_action`, and counted. |
 

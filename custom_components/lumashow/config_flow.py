@@ -36,6 +36,7 @@ from .const import (
     KEY_SOURCE_ESPHOME,
     KEY_SOURCE_MANUAL,
     MAX_ENTITIES,
+    OPT_CAMERA_EVENTS,
     OPT_CONTROL_DOMAINS,
     OPT_ENTITIES,
     OPT_FORWARD_NOTIFICATIONS,
@@ -508,6 +509,7 @@ class LumaShowOptionsFlow(OptionsFlowWithReload):
             self.draft[OPT_FORWARD_NOTIFICATIONS] = bool(user_input.get(OPT_FORWARD_NOTIFICATIONS))
             self.draft[OPT_SHARE_STREAMS] = bool(user_input.get(OPT_SHARE_STREAMS))
             self.draft[OPT_SHARE_ALARMS] = bool(user_input.get(OPT_SHARE_ALARMS))
+            self.draft[OPT_CAMERA_EVENTS] = bool(user_input.get(OPT_CAMERA_EVENTS))
             self._note = "Saved in the draft."
             return await self.async_step_init()
         return self.async_show_form(
@@ -517,6 +519,7 @@ class LumaShowOptionsFlow(OptionsFlowWithReload):
                     vol.Optional(OPT_FORWARD_NOTIFICATIONS, default=bool(self.draft.get(OPT_FORWARD_NOTIFICATIONS))): selector.BooleanSelector(),
                     vol.Optional(OPT_SHARE_STREAMS, default=bool(self.draft.get(OPT_SHARE_STREAMS))): selector.BooleanSelector(),
                     vol.Optional(OPT_SHARE_ALARMS, default=bool(self.draft.get(OPT_SHARE_ALARMS))): selector.BooleanSelector(),
+                    vol.Optional(OPT_CAMERA_EVENTS, default=bool(self.draft.get(OPT_CAMERA_EVENTS))): selector.BooleanSelector(),
                 }
             ),
         )

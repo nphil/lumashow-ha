@@ -415,7 +415,18 @@ class Hub:
         """Sends a message of a module a handler owns (``alarms``): only in a session that agreed it, and ``False`` when there is none."""
         if module in MODULES or module not in self.agreed:
             return False
-        return await self._send(message(module, kind, **fields))
+        # Not `message(module, kind, **fields)`: a module's field may be named `kind` too (a camera event's).
+        return await self._send({**fields, "m": module, "t": kind})
+
+    def spawn_module_send(self, module: str, kind: str, fields: Mapping[str, Any]) -> None:
+        """``async_send_module`` from a callback (a state change): the send is a task of the entry's."""
+        if module in MODULES or module not in self.agreed:
+            return
+        self._spawn(self.async_send_module(module, kind, fields), f"lumashow module {module} {kind}")
+
+    def shared_entities(self) -> Mapping[str, Shared]:
+        """What is shared with this Show now, by entity id (a module reads it; the hub owns it)."""
+        return self._allowed
 
     async def _dispatch(self, incoming: Message) -> bool:
         """Handles one message of the Show; ``True`` when the session is over."""
@@ -538,6 +549,11 @@ class Hub:
             if not await self._send(part):
                 return
         self._mark_push()
+        # A module that follows the shared set (camera events) is told that it may have changed.
+        for name, handler in module_handlers(self.hass).items():
+            changed = getattr(handler, "async_shared_changed", None)
+            if name in self.agreed and changed is not None:
+                self._spawn(changed(self), f"lumashow module {name} shared")
 
     def _mark_push(self) -> None:
         now = self.clock()

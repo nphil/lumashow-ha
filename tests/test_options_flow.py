@@ -16,6 +16,7 @@ from homeassistant.setup import async_setup_component
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.lumashow.const import (
+    OPT_CAMERA_EVENTS,
     OPT_CONTROL_DOMAINS,
     OPT_ENTITIES,
     OPT_FORWARD_NOTIFICATIONS,
@@ -290,10 +291,11 @@ async def test_the_extras_are_off_until_turned_on(hass: HomeAssistant, entry: Mo
     result = await start(hass, entry)
     result = await go(hass, result, "extras")
     defaults = {str(key): key.default() for key in result["data_schema"].schema}
-    assert defaults == {OPT_FORWARD_NOTIFICATIONS: False, OPT_SHARE_STREAMS: False, OPT_SHARE_ALARMS: False}
+    assert defaults == {OPT_FORWARD_NOTIFICATIONS: False, OPT_SHARE_STREAMS: False, OPT_SHARE_ALARMS: False, OPT_CAMERA_EVENTS: False}
     result = await hass.config_entries.options.async_configure(result["flow_id"], {OPT_FORWARD_NOTIFICATIONS: True})
     data = await save(hass, result)
     assert data[OPT_FORWARD_NOTIFICATIONS] is True and data[OPT_SHARE_STREAMS] is False and data[OPT_SHARE_ALARMS] is False
+    assert data[OPT_CAMERA_EVENTS] is False
 
 
 async def test_saving_reloads_the_entry_and_the_show_is_given_what_was_picked(hass: HomeAssistant, show: FakeShow, entry: MockConfigEntry) -> None:
