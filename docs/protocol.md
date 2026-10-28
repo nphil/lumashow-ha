@@ -234,6 +234,21 @@ integration owns the mapping from detectors to cameras, so a device never sees a
 
 The camera's picture is the one `cameras.list` already gave (`snapshot.url`): a device fetches it when an event arrives and shows it with the words.
 
+## 10c. `camera_live` (module version 1)
+
+A shared camera's live stream for a device with a video decoder (a LumaTV), **without the camera's own address or password**. The device
+asks; the integration asks Home Assistant's stream integration, which pulls the camera's stream itself and serves it as low-latency HLS of
+fragmented MP4 at a tokened address on Home Assistant's own port; the device fetches that from the home network and plays it. The stream
+stops by itself once nothing fetches it (Home Assistant's idle rule). **Offered with *Send camera events*** (the same option), only while the
+device registered a handler, and only for cameras of the shared set.
+
+| Message | Direction | Fields |
+|---|---|---|
+| `start` | device → integration | `op`, `camera` (an entity of `cameras.list`), `format` (`hls`; the only one in version 1). |
+| `started` | integration → device | `op`, `camera`, `kind` (`hls`), `url` (the playlist's address at Home Assistant's internal URL). |
+| `failed` | integration → device | `op`, `camera`, `code` (`bad_args`, `not_allowed`, `no_stream`, `unavailable`, `failed`), `message`. |
+| `stop` | device → integration | `camera`: the device is done with the stream (informational; the stream ends by itself when it is no longer fetched). |
+
 ## 11. Who decides what (the rules both ends must keep)
 
 1. The **integration** decides every action: entity shared with this Show, control allowed, verb in §6, args in range, not paused, rate limit (10 calls in 10 s per Show), sensitive rules.

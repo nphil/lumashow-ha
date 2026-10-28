@@ -14,6 +14,8 @@ from .alarms import MODULE as ALARMS
 from .alarms import AlarmsModule
 from .camera_events import MODULE as CAMERA_EVENTS
 from .camera_events import CameraEventsModule
+from .camera_live import MODULE as CAMERA_LIVE
+from .camera_live import CameraLiveModule
 from .hub import Hub, module_handlers
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.NOTIFY, Platform.SENSOR, Platform.SWITCH]
@@ -27,6 +29,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: LumaShowConfigEntry) -> 
     module_handlers(hass).setdefault(ALARMS, AlarmsModule(hass))
     # The owner of module `camera_events` (what a shared camera's detectors see, for a pop-up): runs only while a device shares them.
     module_handlers(hass).setdefault(CAMERA_EVENTS, CameraEventsModule(hass))
+    # The owner of module `camera_live` (a shared camera's stream for a device with a decoder, without the camera's address): offered with the events.
+    module_handlers(hass).setdefault(CAMERA_LIVE, CameraLiveModule(hass))
     hub = Hub(hass, entry)
     await hub.async_start()
     entry.runtime_data = hub
