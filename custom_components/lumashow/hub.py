@@ -20,7 +20,7 @@ import logging
 import time
 import uuid
 from collections import deque
-from collections.abc import Callable, Mapping
+from collections.abc import Awaitable, Callable, Mapping
 from datetime import UTC, datetime, timedelta
 from typing import Any, Protocol
 
@@ -435,6 +435,10 @@ class Hub:
         if module in MODULES or module not in self.agreed:
             return
         self._spawn(self.async_send_module(module, kind, fields), f"lumashow module {module} {kind}")
+
+    def spawn_module_call(self, call: Callable[[], Awaitable[Any]], name: str) -> None:
+        """A module's own coroutine from a callback (a timer, a state change): the task is the entry's."""
+        self._spawn(call(), name)
 
     def shared_entities(self) -> Mapping[str, Shared]:
         """What is shared with this Show now, by entity id (a module reads it; the hub owns it)."""

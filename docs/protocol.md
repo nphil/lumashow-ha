@@ -265,6 +265,22 @@ A relay frame (type 2) is a 12-byte header and at most 60000 bytes of the access
 gap means a frame was lost and the unit is to be dropped), `timestamp` (4 bytes, the RTP timestamp at `clock` ticks per second, wrapping).
 The access unit is Annex B (`00 00 00 01` before every NAL unit); a key picture's unit carries its parameter sets before the picture.
 
+## 10d. `weather` (module version 1)
+
+One weather entity's reading and forecasts for a device that draws the weather (a LumaTV's Home card and weather view). **Offered only when the person turned on
+*Send a weather entity to the device*** (an option of its entry; off by default) and only while the device registered a handler. The person chooses the entity **on the
+device** from the list below, and can take the choice back there; the integration stores the choice in the entry's options (`weather_entity`) and sends nothing about any
+other entity. The reading and the forecasts come from Home Assistant's own weather entity (Pirate Weather, a station, Met.no), so the device needs no key and no
+internet for it.
+
+| Message | Direction | Fields |
+|---|---|---|
+| `list` | integration → device | `entities`: [`id`, `name`] of the `weather` entities that are not hidden or disabled; `selected`: the chosen entity or `null`. Sent when the session begins and after a `select`. |
+| `select` | device → integration | `entity`: one of `list.entities`, or `null` to take the choice back. An entity that is not in the list is answered with `failed` (`code` `not_found`). |
+| `snapshot` | integration → device | `entity`, `available` (false while the entity is unknown or unavailable: nothing else follows), `name`, `condition` (Home Assistant's weather condition word: `clear-night`, `cloudy`, `rainy`, `pouring`, ...), `reading` (numbers and units of the entity's attributes: `temperature`, `apparent_temperature`, `humidity`, `pressure`, `wind_speed`, `wind_gust_speed`, `wind_bearing`, `cloud_coverage`, `uv_index`, `visibility`, `*_unit`), `hourly` (at most 48 entries) and `daily` (at most 10): each entry `datetime` plus `condition`, `temperature`, `templow`, `apparent_temperature`, `precipitation`, `precipitation_probability`, `humidity`, `wind_speed`, `wind_gust_speed`, `wind_bearing`, `cloud_coverage`, `uv_index`, `is_daytime` where the integration has them (`weather.get_forecasts`; an entity that cannot give a kind gives an empty list), `at` (seconds since the epoch). Sent when a choice is made, 5 s after the entity changes (a station updates several attributes in a row), and every 15 minutes. |
+| `refresh` | device → integration | asks for `snapshot` again. |
+| `failed` | integration → device | `op`, `code`, `message`. |
+
 ## 11. Who decides what (the rules both ends must keep)
 
 1. The **integration** decides every action: entity shared with this Show, control allowed, verb in §6, args in range, not paused, rate limit (10 calls in 10 s per Show), sensitive rules.

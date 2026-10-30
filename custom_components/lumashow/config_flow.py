@@ -46,6 +46,7 @@ from .const import (
     OPT_SENSITIVE,
     OPT_SHARE_ALARMS,
     OPT_SHARE_STREAMS,
+    OPT_SHARE_WEATHER,
 )
 from .pin import matches as pin_matches
 from .pin import new_pin, well_formed
@@ -510,6 +511,7 @@ class LumaShowOptionsFlow(OptionsFlowWithReload):
             self.draft[OPT_SHARE_STREAMS] = bool(user_input.get(OPT_SHARE_STREAMS))
             self.draft[OPT_SHARE_ALARMS] = bool(user_input.get(OPT_SHARE_ALARMS))
             self.draft[OPT_CAMERA_EVENTS] = bool(user_input.get(OPT_CAMERA_EVENTS))
+            self.draft[OPT_SHARE_WEATHER] = bool(user_input.get(OPT_SHARE_WEATHER))
             self._note = "Saved in the draft."
             return await self.async_step_init()
         return self.async_show_form(
@@ -520,6 +522,7 @@ class LumaShowOptionsFlow(OptionsFlowWithReload):
                     vol.Optional(OPT_SHARE_STREAMS, default=bool(self.draft.get(OPT_SHARE_STREAMS))): selector.BooleanSelector(),
                     vol.Optional(OPT_SHARE_ALARMS, default=bool(self.draft.get(OPT_SHARE_ALARMS))): selector.BooleanSelector(),
                     vol.Optional(OPT_CAMERA_EVENTS, default=bool(self.draft.get(OPT_CAMERA_EVENTS))): selector.BooleanSelector(),
+                    vol.Optional(OPT_SHARE_WEATHER, default=bool(self.draft.get(OPT_SHARE_WEATHER))): selector.BooleanSelector(),
                 }
             ),
         )

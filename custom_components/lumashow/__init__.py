@@ -17,6 +17,8 @@ from .camera_events import CameraEventsModule
 from .camera_live import MODULE as CAMERA_LIVE
 from .camera_live import CameraLiveModule
 from .hub import Hub, module_handlers
+from .weather import MODULE as WEATHER
+from .weather import WeatherModule
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.NOTIFY, Platform.SENSOR, Platform.SWITCH]
 
@@ -31,6 +33,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: LumaShowConfigEntry) -> 
     module_handlers(hass).setdefault(CAMERA_EVENTS, CameraEventsModule(hass))
     # The owner of module `camera_live` (a shared camera's stream for a device with a decoder, without the camera's address): offered with the events.
     module_handlers(hass).setdefault(CAMERA_LIVE, CameraLiveModule(hass))
+    # The owner of module `weather` (one weather entity's reading and forecasts, chosen on the device): runs only while a device shares it.
+    module_handlers(hass).setdefault(WEATHER, WeatherModule(hass))
     hub = Hub(hass, entry)
     await hub.async_start()
     entry.runtime_data = hub

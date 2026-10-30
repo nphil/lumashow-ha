@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- **Weather** (module `weather`, protocol §10d): *Send a weather entity to the device* (off by default) lets a device ask for the list of weather entities and show one of them, chosen on the
+  device: its reading and its hourly and daily forecasts (`weather.get_forecasts`), sent when chosen, when the entity changes and every 15 minutes. Nothing else about Home Assistant is sent.
+
 ## 0.2.0
 
 For a LumaTV (the LG TV shell) as one more LumaShow device: camera events and live camera streams. Both are **off for every device** until
