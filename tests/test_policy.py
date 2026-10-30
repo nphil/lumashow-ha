@@ -68,6 +68,11 @@ def test_the_show_is_told_no_verb_unless_the_person_allowed_it() -> None:
     # A lock with control allowed offers locking, and unlocking only when it was enabled for the entity.
     assert verb_lists("lock.door", {}, control=True, sensitive=False) == (["lock"], [])
     assert verb_lists("lock.door", {}, control=True, sensitive=True) == (["lock"], ["unlock", "open"])
+    # A device's confirmation-only option offers a lock's unlock (not its open), with or without a PIN, and nothing on another domain.
+    assert verb_lists("lock.door", {}, control=True, sensitive=False, confirm_unlock=True) == (["lock"], ["unlock"])
+    assert verb_lists("lock.door", {}, control=True, sensitive=True, confirm_unlock=True) == (["lock"], ["unlock", "open"])
+    assert verb_lists("cover.garage", {"device_class": "garage"}, control=True, sensitive=False, confirm_unlock=True)[1] == []
+    assert verb_lists("siren.hall", {}, control=False, sensitive=False, confirm_unlock=True) == ([], [])
     # A siren has no ordinary verb at all.
     assert verb_lists("siren.hall", {}, control=True, sensitive=False) == ([], [])
     assert verb_lists("siren.hall", {}, control=False, sensitive=True)[1] == ["turn_on", "turn_off", "toggle"]

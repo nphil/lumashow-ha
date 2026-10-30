@@ -9,7 +9,7 @@ Lets your **LumaShow** screens (the first is an Echo Show 5 running LumaShow OS)
 - **You choose, per Show.** Areas, devices, kinds of thing (lights, locks, cameras...) or single entities. A new Show starts with **nothing**.
 - **Home Assistant sends only that.** The Show holds **no access token and no address of your Home Assistant**. It cannot ask for anything that is not on its list, and it learns the name of an area only if one of its entities stands there.
 - **You choose what it may do.** By default it may only look. You tick the kinds it may act on (turn lights on and off, close covers, set a thermostat...). Home Assistant has a fixed list of actions per kind; the Show can ask for one of those and for nothing else.
-- **Dangerous actions are off.** Unlocking, disarming an alarm, opening a garage door, a gate or a door, opening a valve, switching a camera or a siren off: each needs you to turn it on for that entity, a PIN you set (kept as a hash here; the Show never has it), and a fresh touch and confirmation on the Show. Voice, plugins and automations can never do them.
+- **Dangerous actions are off.** Unlocking, disarming an alarm, opening a garage door, a gate or a door, opening a valve, switching a camera or a siren off: each needs you to turn it on for that entity, a PIN you set (kept as a hash here; the Show never has it), and a fresh touch and confirmation on the Show. Voice, plugins and automations can never do them. One optional exception: *Unlock from this device with a confirmation only* (off by default, per device) lets a lock you allowed be unlocked by a person's confirmation on that device, such as the question on a LumaTV answered with its remote, with no PIN.
 - **You can see and stop it.** Every action a Show makes is in the Logbook (*"Living Room Show: turned on Kitchen light"*), counted by a sensor, held to 10 actions in 10 seconds, and one switch per Show, **Pause control**, stops all of them at once.
 
 This is the Home Assistant half. The Show half is part of LumaShow OS (*Settings › Home Assistant* on the Show). The wire protocol both speak is in [`docs/protocol.md`](docs/protocol.md).
@@ -59,7 +59,7 @@ At most 256 entities per Show.
 | What the Show may do | **Nothing, only look.** You tick the kinds it may act on. |
 | Which actions exist | A fixed table per kind of entity (a light's on, off, brightness, colour; a cover's open, close, position; a thermostat's setpoint and mode...). There is no free-form service call. An unknown action is refused and logged. |
 | Scripts and automations | Never added by a quick start. Shared only if you pick them by name. |
-| Sensitive actions (unlock, disarm, open a garage door, gate or door, open a valve, switch a camera or siren off, anything on a smoke or leak sensor's switch) | **Off.** Allowed per entity, then they need your PIN, a touch on the Show and a confirmation there. Five wrong PINs lock them for ten minutes. |
+| Sensitive actions (unlock, disarm, open a garage door, gate or door, open a valve, switch a camera or siren off, anything on a smoke or leak sensor's switch) | **Off.** Allowed per entity, then they need your PIN, a touch on the Show and a confirmation there. Five wrong PINs lock them for ten minutes. A lock's unlock alone can be waived of the PIN per device with *Unlock from this device with a confirmation only* (*Notifications, cameras and alarms*): then only that device's confirmed touch unlocks it. |
 | Camera pictures | A temporary signed address (valid for an hour) for each shared camera. The camera's stream address, which can contain a password, is **not** sent unless you turn it on. |
 | Home Assistant's own notifications | **Off.** |
 | Alarms | **Off** (see below). |
@@ -116,7 +116,7 @@ An alarm made on one Show is then on the others, and you can make or change one 
 - *Nothing happens when you tap something on the Show*: *Logbook*, look for *"<Show>: ..."* lines. A refused action says why (not shared, read-only, paused, too many at once, not one of the Show's actions, needs a PIN).
 - *Diagnostics* (the entry's three dots) are safe to attach to a bug report: the key and the PIN are removed.
 
-## Not in 0.2.0
+## Not in 0.3.0
 
 The PIN pad and confirmation on the Show (until it has one, sensitive actions cannot be made from the Show), the media, presence and intercom modules (the protocol reserves their names), the camera wall's use of the camera list, and audio on the relayed camera stream.
 

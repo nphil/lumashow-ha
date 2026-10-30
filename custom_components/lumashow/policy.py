@@ -227,6 +227,11 @@ def is_sensitive(domain: str, verb: str, attributes: Mapping[str, Any] | None = 
     return domain == "cover" and device_class in WAY_IN_CLASSES and verb in _WAY_IN_VERBS
 
 
+def confirms_alone(domain: str, verb: str) -> bool:
+    """Whether ``verb`` is the one sensitive verb the *confirmation only* option waives the PIN for: a lock's ``unlock``, never its ``open``."""
+    return (domain, verb) == ("lock", "unlock")
+
+
 def verbs_of(domain: str) -> dict[str, vol.Schema]:
     """The verbs of a domain (none for a domain the Show may not act on)."""
     return VERBS.get(domain, {})
@@ -238,18 +243,21 @@ def verb_lists(
     *,
     control: bool,
     sensitive: bool,
+    confirm_unlock: bool = False,
 ) -> tuple[list[str], list[str]]:
     """The verbs the Show is told it may use on an entity now: ``(ctl, ctl_pin)``.
 
     ``control``: the person lets the Show act on this entity (its domain is allowed, it is not read-only, control is not paused).
     ``sensitive``: the person also enabled its sensitive verbs (and there is a PIN, and control is not paused).
+    ``confirm_unlock``: the person allowed this lock's unlock from the device with a confirmation only (control is not paused): ``unlock``
+    is offered with no PIN set; the lock's other sensitive verbs are not.
     """
     domain = domain_of(entity_id)
     ordinary: list[str] = []
     needing_pin: list[str] = []
     for verb in verbs_of(domain):
         if is_sensitive(domain, verb, attributes):
-            if sensitive:
+            if sensitive or (confirm_unlock and confirms_alone(domain, verb)):
                 needing_pin.append(verb)
         elif control:
             ordinary.append(verb)

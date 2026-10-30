@@ -27,6 +27,7 @@ from custom_components.lumashow.const import (
     OPT_SHARE_ALARMS,
     OPT_SHARE_STREAMS,
     OPT_SHARE_WEATHER,
+    OPT_UNLOCK_CONFIRM_ONLY,
 )
 from custom_components.lumashow.pin import matches as pin_matches
 from custom_components.lumashow.pin import new_pin
@@ -216,6 +217,23 @@ async def test_a_sensitive_action_cannot_be_allowed_before_a_pin_exists(hass: Ho
     assert not data.get(OPT_SENSITIVE) and OPT_PIN_HASH not in data
 
 
+async def test_unlocking_with_a_confirmation_only_is_a_choice_of_its_own_and_lets_a_lock_be_allowed_before_a_pin_exists(
+    hass: HomeAssistant, entry: MockConfigEntry
+) -> None:
+    house(hass)
+    result = await start(hass, entry)
+    result = await go(hass, result, "pick_type", {"groups": ["locks", "cameras"]})
+    result = await go(hass, result, "extras", {OPT_UNLOCK_CONFIRM_ONLY: True})
+    result = await go(hass, result, "sensitive")
+    assert result["type"] is FlowResultType.FORM and result["step_id"] == "sensitive", "the step opens with no PIN set"
+    # only a lock's unlock can be allowed without a PIN: a camera's sensitive verbs are not offered
+    offered = {o["value"] if isinstance(o, dict) else o for o in result["data_schema"].schema[OPT_SENSITIVE].config["include_entities"]}
+    assert offered == {"lock.front_door"}
+    result = await hass.config_entries.options.async_configure(result["flow_id"], {OPT_SENSITIVE: ["lock.front_door"]})
+    data = await save(hass, result)
+    assert data[OPT_UNLOCK_CONFIRM_ONLY] is True and data[OPT_SENSITIVE] == ["lock.front_door"] and OPT_PIN_HASH not in data
+
+
 async def test_with_a_pin_a_sensitive_action_can_be_allowed_and_the_pin_itself_is_never_kept(hass: HomeAssistant, entry: MockConfigEntry) -> None:
     house(hass)
     result = await start(hass, entry)
@@ -292,11 +310,18 @@ async def test_the_extras_are_off_until_turned_on(hass: HomeAssistant, entry: Mo
     result = await start(hass, entry)
     result = await go(hass, result, "extras")
     defaults = {str(key): key.default() for key in result["data_schema"].schema}
-    assert defaults == {OPT_FORWARD_NOTIFICATIONS: False, OPT_SHARE_STREAMS: False, OPT_SHARE_ALARMS: False, OPT_CAMERA_EVENTS: False, OPT_SHARE_WEATHER: False}
+    assert defaults == {
+        OPT_FORWARD_NOTIFICATIONS: False,
+        OPT_SHARE_STREAMS: False,
+        OPT_SHARE_ALARMS: False,
+        OPT_CAMERA_EVENTS: False,
+        OPT_SHARE_WEATHER: False,
+        OPT_UNLOCK_CONFIRM_ONLY: False,
+    }
     result = await hass.config_entries.options.async_configure(result["flow_id"], {OPT_FORWARD_NOTIFICATIONS: True})
     data = await save(hass, result)
     assert data[OPT_FORWARD_NOTIFICATIONS] is True and data[OPT_SHARE_STREAMS] is False and data[OPT_SHARE_ALARMS] is False
-    assert data[OPT_CAMERA_EVENTS] is False
+    assert data[OPT_CAMERA_EVENTS] is False and data[OPT_UNLOCK_CONFIRM_ONLY] is False
 
 
 async def test_saving_reloads_the_entry_and_the_show_is_given_what_was_picked(hass: HomeAssistant, show: FakeShow, entry: MockConfigEntry) -> None:

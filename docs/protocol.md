@@ -105,7 +105,8 @@ Nothing else is ever executed: **there is no free-form service call**, no target
 
 A verb is the name of the Home Assistant service of the entity's own domain, **and only these exist**. The integration holds this table
 (`actions.py`) and refuses anything else (`unknown_verb`); the Show may use it to hide controls. `S` marks a sensitive verb: never
-allowed unless the person enabled it for that entity in Home Assistant, and then only with `origin: touch`, `confirmed: true` and the PIN.
+allowed unless the person enabled it for that entity in Home Assistant, and then only with `origin: touch`, `confirmed: true` and the PIN. The one exception is
+`lock.unlock` on a device whose entry has *Unlock from this device with a confirmation only* on (§11).
 
 | Domain | Verbs (args) |
 |---|---|
@@ -286,5 +287,8 @@ internet for it.
 1. The **integration** decides every action: entity shared with this Show, control allowed, verb in §6, args in range, not paused, rate limit (10 calls in 10 s per Show), sensitive rules.
 2. The Show cannot read what was not pushed: no registry, no `get_states`, no history, no other entity, no other area or device name.
 3. **Sensitive** verbs: refused (`sensitive_disabled`) unless that entity has them enabled in Home Assistant; then they need `origin: touch`, `confirmed: true` and the PIN the person set in the integration (its hash lives in Home Assistant and is checked there; five wrong PINs lock sensitive verbs for 10 minutes). A voice, plugin or automation origin never opens them.
+   *Unlock from this device with a confirmation only* (an option of the device's entry, off by default): for a lock the person enabled, `lock.unlock` from that device needs `origin: touch` and
+   `confirmed: true` and no PIN (a LumaTV sends exactly that after its own on-screen question is answered with the remote, and it refuses to send it for anything else). Every other origin,
+   every unconfirmed request, `lock.open` and every other sensitive verb are refused as before, and the option holds for no other device. The lock is offered in `ctl_pin` even when no PIN is set.
 4. Every call is in Home Assistant's **logbook** as `<Show name>: <what>` with the entity, counted by an entity, and fired as the `lumashow_action` event; every refusal is logged. A *Pause control* switch per Show refuses every call at once.
 5. Unloading, disabling or removing the config entry sends `bye` and closes: the Show drops everything at once. Connecting again after the Show has forgotten Home Assistant needs a new key, and only the Show's Pair window (five minutes, opened on the Show) gives one.

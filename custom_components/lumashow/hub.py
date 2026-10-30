@@ -74,9 +74,9 @@ from .const import (
     VERSION,
 )
 from .pin import pin_ok
-from .policy import BadArgs, describe, domain_of, is_sensitive, validate_args, verb_lists, verbs_of
+from .policy import BadArgs, confirms_alone, describe, domain_of, is_sensitive, validate_args, verb_lists, verbs_of
 from .protocol import MAX_PART, MODULES, PROTO, Message, ProtocolError, message
-from .selection import Shared, area_names, control_flags, listed, resolve
+from .selection import Shared, area_names, confirm_unlock_flag, control_flags, listed, resolve
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -485,6 +485,7 @@ class Hub:
             state.attributes if state else None,
             control=control and not self.paused,
             sensitive=sensitive and not self.paused,
+            confirm_unlock=confirm_unlock_flag(self.options, entity_id) and not self.paused,
         )
 
     def _record(self, shared: Shared, areas: Mapping[str, str]) -> dict[str, Any]:
@@ -740,6 +741,7 @@ class Hub:
         origin = call.get("origin")
         origin = origin if origin in ORIGINS else "plugin"
         shared_list: list[Shared] = []
+        sensitive_call = False
         needs_pin = False
         for entity_id in dict.fromkeys(ids):
             shared = self._allowed.get(entity_id)
@@ -750,17 +752,21 @@ class Hub:
             if verb in ordinary:
                 pass
             elif verb in needing_pin:
-                needs_pin = True
+                sensitive_call = True
+                # the device's *confirmation only* option waives the PIN for a lock's unlock, and for nothing else
+                if not (confirms_alone(domain, verb) and confirm_unlock_flag(self.options, entity_id)):
+                    needs_pin = True
             elif is_sensitive(domain, verb, state.attributes if state else None):
                 raise Refusal("sensitive_disabled", f"{domain}.{verb} on {entity_id}")
             else:
                 raise Refusal("not_allowed", f"{domain}.{verb} on {entity_id}: the Show may not act on it")
             shared_list.append(shared)
-        if needs_pin:
-            self._precheck_pin(call, origin)
+        if sensitive_call:
+            self._precheck_pin(call, origin, needs_pin)
         return domain, verb, args, shared_list, origin, needs_pin
 
-    def _precheck_pin(self, call: Mapping[str, Any], origin: str) -> None:
+    def _precheck_pin(self, call: Mapping[str, Any], origin: str, needs_pin: bool) -> None:
+        """A sensitive verb needs the device's own touch, confirmed, and (unless the confirmation-only option waives it) the PIN."""
         if self.clock() < self._locked_until:
             raise Refusal("locked_out")
         if origin != "touch":
@@ -768,7 +774,7 @@ class Hub:
         if call.get("confirmed") is not True:
             raise Refusal("needs_confirm")
         pin = call.get("pin")
-        if not isinstance(pin, str) or not pin:
+        if needs_pin and (not isinstance(pin, str) or not pin):
             raise Refusal("pin_required")
 
     async def _check_pin(self, pin: str) -> None:

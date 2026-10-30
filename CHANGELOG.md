@@ -1,9 +1,16 @@
 # Changelog
 
-## Unreleased
+## 0.3.0
+
+A weather module and a per-device way to unlock a lock from a LumaTV's own confirmation.
 
 - **Weather** (module `weather`, protocol §10d): *Send a weather entity to the device* (off by default) lets a device ask for the list of weather entities and show one of them, chosen on the
   device: its reading and its hourly and daily forecasts (`weather.get_forecasts`), sent when chosen, when the entity changes and every 15 minutes. Nothing else about Home Assistant is sent.
+- **Unlock from this device with a confirmation only** (option per device, off by default; *Configure › Notifications, cameras and alarms*): for a lock allowed under *Sensitive actions*,
+  `lock.unlock` from that device is done when it carries the device's own confirmation (`origin: touch`, `confirmed: true`, as a LumaTV sends it after its on-screen question is answered with the
+  remote), with no PIN. Every other origin, an unconfirmed request, `lock.open` and every other sensitive verb are refused as before, and the option holds for no other device. A lock can be allowed
+  under *Sensitive actions* before a PIN is set while the option is on. Paused control and the wrong-PIN lockout stop it too; the unlock is in the Logbook and the `lumashow_action` event as `lock.unlock`, `touch`.
+- Camera relay: a stopped relay's TEARDOWN is now read through to its answer before the socket closes (a socket closed with the restream's pictures still unread is reset, which could drop the request and leave go2rtc's session to time out), and the reading task is stopped first.
 
 ## 0.2.0
 

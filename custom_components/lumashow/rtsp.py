@@ -324,6 +324,18 @@ class Session:
                 last_alive = now
                 await self._send("GET_PARAMETER", self.url, {"Session": self.session_id})
 
+    async def _teardown(self) -> None:
+        """TEARDOWN, and the wait for its answer: a socket closed with pictures still unread is reset, and the reset can take the request with it."""
+        await self._send("TEARDOWN", self.url, {"Session": self.session_id})
+        while True:
+            head = await self._reader.readexactly(1)
+            if head == b"$":
+                length = int.from_bytes((await self._reader.readexactly(3))[1:3], "big")
+                await self._reader.readexactly(length)
+            else:
+                await self._read_response(first=head)
+                return
+
     async def _send(self, method: str, url: str, headers: dict[str, str]) -> int:
         self._cseq += 1
         lines = [f"{method} {url} RTSP/1.0", f"CSeq: {self._cseq}", "User-Agent: lumashow-ha"]
@@ -369,7 +381,7 @@ class Session:
             return
         self.closed = True
         with contextlib.suppress(Exception):
-            await asyncio.wait_for(self._send("TEARDOWN", self.url, {"Session": self.session_id}), 1.0)
+            await asyncio.wait_for(self._teardown(), 1.0)
         self._writer.close()
         with contextlib.suppress(Exception):
             await self._writer.wait_closed()

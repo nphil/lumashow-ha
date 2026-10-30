@@ -47,10 +47,11 @@ from .const import (
     OPT_SHARE_ALARMS,
     OPT_SHARE_STREAMS,
     OPT_SHARE_WEATHER,
+    OPT_UNLOCK_CONFIRM_ONLY,
 )
 from .pin import matches as pin_matches
 from .pin import new_pin, well_formed
-from .policy import SENSITIVE_ONLY_DOMAINS, is_sensitive, verbs_of
+from .policy import SENSITIVE_ONLY_DOMAINS, confirms_alone, is_sensitive, verbs_of
 from .selection import (
     DEFAULT_GROUPS,
     TYPE_GROUPS,
@@ -451,10 +452,20 @@ class LumaShowOptionsFlow(OptionsFlowWithReload):
         )
 
     async def async_step_sensitive(self, user_input: dict[str, Any] | None = None) -> Any:
-        if not self.draft.get(OPT_PIN_HASH):
+        # Without a PIN only the confirmation-only unlock of a lock can be allowed (Notifications, cameras and alarms > Unlock from this device
+        # with a confirmation only); every other sensitive action needs the PIN to exist.
+        confirm_only = bool(self.draft.get(OPT_UNLOCK_CONFIRM_ONLY))
+        if not self.draft.get(OPT_PIN_HASH) and not confirm_only:
             self._note = "Set a PIN first: a sensitive action cannot be allowed without one."
             return await self.async_step_init()
-        candidates = [e for e in listed(self.draft) if any(is_sensitive(e.partition(".")[0], v) for v in verbs_of(e.partition(".")[0]))]
+        pin_set = bool(self.draft.get(OPT_PIN_HASH))
+        candidates = [
+            e
+            for e in listed(self.draft)
+            if any(
+                is_sensitive(e.partition(".")[0], v) and (pin_set or confirms_alone(e.partition(".")[0], v)) for v in verbs_of(e.partition(".")[0])
+            )
+        ]
         if user_input is not None:
             self.draft[OPT_SENSITIVE] = [e for e in user_input.get(OPT_SENSITIVE) or [] if e in candidates]
             self._note = "Sensitive actions saved in the draft."
@@ -512,6 +523,7 @@ class LumaShowOptionsFlow(OptionsFlowWithReload):
             self.draft[OPT_SHARE_ALARMS] = bool(user_input.get(OPT_SHARE_ALARMS))
             self.draft[OPT_CAMERA_EVENTS] = bool(user_input.get(OPT_CAMERA_EVENTS))
             self.draft[OPT_SHARE_WEATHER] = bool(user_input.get(OPT_SHARE_WEATHER))
+            self.draft[OPT_UNLOCK_CONFIRM_ONLY] = bool(user_input.get(OPT_UNLOCK_CONFIRM_ONLY))
             self._note = "Saved in the draft."
             return await self.async_step_init()
         return self.async_show_form(
@@ -523,6 +535,7 @@ class LumaShowOptionsFlow(OptionsFlowWithReload):
                     vol.Optional(OPT_SHARE_ALARMS, default=bool(self.draft.get(OPT_SHARE_ALARMS))): selector.BooleanSelector(),
                     vol.Optional(OPT_CAMERA_EVENTS, default=bool(self.draft.get(OPT_CAMERA_EVENTS))): selector.BooleanSelector(),
                     vol.Optional(OPT_SHARE_WEATHER, default=bool(self.draft.get(OPT_SHARE_WEATHER))): selector.BooleanSelector(),
+                    vol.Optional(OPT_UNLOCK_CONFIRM_ONLY, default=bool(self.draft.get(OPT_UNLOCK_CONFIRM_ONLY))): selector.BooleanSelector(),
                 }
             ),
         )

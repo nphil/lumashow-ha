@@ -23,7 +23,7 @@
   "requirements": [
     "noiseprotocol>=0.3.1,<1.0"
   ],
-  "version": "0.2.0",
+  "version": "0.3.0",
   "zeroconf": [
     "_lumashow._tcp.local."
   ]

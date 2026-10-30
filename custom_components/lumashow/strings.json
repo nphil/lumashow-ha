@@ -118,7 +118,7 @@
       },
       "sensitive": {
         "title": "Sensitive actions",
-        "description": "{count} entities on the list have actions that are sensitive: unlocking, disarming an alarm, opening a garage door or a gate, opening a valve, turning a camera or a siren off. They are off unless you pick the entity here. Even then the Show must ask on its own screen, with a fresh confirmation and the PIN, and a voice or a plugin can never ask. Locking, arming and closing need no PIN.",
+        "description": "{count} entities on the list have actions that are sensitive: unlocking, disarming an alarm, opening a garage door or a gate, opening a valve, turning a camera or a siren off. They are off unless you pick the entity here. Even then the Show must ask on its own screen, with a fresh confirmation and the PIN, and a voice or a plugin can never ask. Locking, arming and closing need no PIN. The one exception is a lock's unlock, when *Unlock from this device with a confirmation only* is on for this device.",
         "data": {
           "sensitive": "Allow the sensitive actions of"
         }
@@ -139,14 +139,16 @@
           "share_streams": "Share camera addresses with the Show",
           "share_alarms": "Share alarms with the Show",
           "camera_events": "Send camera events to the device",
-          "share_weather": "Send a weather entity to the device"
+          "share_weather": "Send a weather entity to the device",
+          "unlock_confirm_only": "Unlock from this device with a confirmation only"
         },
         "data_description": {
           "forward_notifications": "Persistent notifications (a low battery, a leak sensor) appear in the Show's notifications. Off by default.",
           "share_streams": "The Show always gets a temporary address for each shared camera's picture. This also gives it the camera's stream address, which can contain a password. Off by default.",
           "share_alarms": "The Show gets the alarms of the calendar named LumaShow alarms (calendar.lumashow_alarms) and can add, change and delete them; Shows that share alarms keep each other's alarms in step. Off by default.",
           "camera_events": "What the shared cameras' detectors see (a person, a vehicle, an animal, a package, a doorbell ring, motion) is sent as it happens, for a pop-up on a TV or a card on a Show, and a device with a video decoder may ask for a shared camera's live stream through Home Assistant (never the camera's own address). Only cameras in the shared list. Off by default.",
-          "share_weather": "The device may ask for the list of weather entities and show one of them (its reading and forecasts) on its Home screen. You choose which one on the device, and can take the choice back there. Nothing else about Home Assistant is sent. Off by default."
+          "share_weather": "The device may ask for the list of weather entities and show one of them (its reading and forecasts) on its Home screen. You choose which one on the device, and can take the choice back there. Nothing else about Home Assistant is sent. Off by default.",
+          "unlock_confirm_only": "A lock you allowed under Sensitive actions is unlocked when this device asks with a person's confirmation (on a LumaTV: the question answered with the remote), without the PIN. Only the lock's unlock, only from this device, and only that confirmed request: a voice, an assistant, a plugin or an unconfirmed request is still refused, and opening a latch still needs the PIN. With this on, a lock can be allowed under Sensitive actions even before a PIN is set. Off by default."
         }
       }
     },

@@ -264,10 +264,11 @@ class Relay:
 
     async def end(self, why: str) -> None:
         self._ended = True
-        with contextlib.suppress(Exception):
-            await self.session.close()
+        # the reading task first: the teardown reads the answer, and two readers of one socket cannot
         if self.task is not None and not self.task.done():
             self.task.cancel()
             with contextlib.suppress(asyncio.CancelledError, Exception):
                 await self.task
+        with contextlib.suppress(Exception):
+            await self.session.close()
         _LOGGER.debug("%s: relay of %s ended: %s (%d units)", self.hub.name, self.camera, why, self.units)

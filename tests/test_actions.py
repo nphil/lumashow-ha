@@ -13,6 +13,7 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry, async_
 from custom_components.lumashow.const import (
     OPT_READ_ONLY,
     OPT_SENSITIVE,
+    OPT_UNLOCK_CONFIRM_ONLY,
 )
 from custom_components.lumashow.hub import module_handlers
 
@@ -353,3 +354,110 @@ async def test_a_module_that_someone_registered_is_offered_and_carried_and_the_o
     assert ("session", True) in recorder.events and ("put", {"uid": "ls-1"}) in recorder.events
     assert not [e for e in recorder.events if e[0] in ("now", "from_the_future")]
     assert rig.hub.connected
+
+
+# -- unlocking from this device with a confirmation only -----------------------------------------------------------------------
+
+
+async def confirm_only_rig(hass: HomeAssistant, rig: Rig, *, pin: bool, **extra: Any) -> list[ServiceCall]:
+    hass.states.async_set("lock.door", "locked", {"friendly_name": "Front door"})
+    hass.states.async_set("lock.back", "locked", {"friendly_name": "Back door"})
+    async_mock_service(hass, "lock", "lock")
+    unlocks = async_mock_service(hass, "lock", "unlock")
+    opens = async_mock_service(hass, "lock", "open")
+    options = {OPT_SENSITIVE: ["lock.door"], OPT_UNLOCK_CONFIRM_ONLY: True, **extra}
+    await rig.start(["lock.door", "lock.back"], ["lock"], **(with_pin(**options) if pin else options))
+    assert opens == []
+    return unlocks
+
+
+@pytest.mark.parametrize("pin", [False, True])
+async def test_with_the_option_on_a_confirmed_touch_unlocks_a_lock_without_the_pin(hass: HomeAssistant, rig: Rig, pin: bool) -> None:
+    unlocks = await confirm_only_rig(hass, rig, pin=pin)
+    snapshot = await rig.session.wait(lambda m: m["m"] == "states" and m["t"] == "snapshot")
+    by_id = {e["id"]: e for e in snapshot["entities"]}
+    assert snapshot["policy"]["pin_set"] is pin
+    # offered for the lock the person allowed, only its unlock without a PIN (the latch opens only with one), nothing for the other lock
+    assert by_id["lock.door"]["ctl_pin"] == (["unlock", "open"] if pin else ["unlock"]) and "ctl_pin" not in by_id["lock.back"]
+    result = await ask(rig.session, ["lock.door"], "unlock", origin="touch", confirmed=True)
+    assert result["ok"] is True and [c.data for c in unlocks] == [{"entity_id": "lock.door"}]
+    assert rig.logbook[-1].data["message"] == "unlocked Front door"
+    assert rig.events[-1].data["verb"] == "lock.unlock" and rig.events[-1].data["origin"] == "touch" and rig.events[-1].data["ok"] is True
+
+
+async def test_with_the_option_on_every_other_way_to_unlock_is_still_refused(hass: HomeAssistant, rig: Rig) -> None:
+    unlocks = await confirm_only_rig(hass, rig, pin=False)
+    clock = [5000.0]
+    rig.hub.clock = lambda: clock.__setitem__(0, clock[0] + 3) or clock[0]  # more calls than the rate limit's ten in ten seconds
+    # not from a plugin, a voice, an automation, nor a request with no origin, even with the confirmation in it
+    for origin in ("plugin", "voice", "automation", "nonsense", None):
+        extra = {} if origin is None else {"origin": origin}
+        assert (await ask(rig.session, ["lock.door"], "unlock", confirmed=True, **extra))["code"] == "needs_touch", origin
+    # not without the confirmation, nor with anything but the boolean true
+    for confirmed in (None, False, "yes", 1, "true"):
+        extra = {} if confirmed is None else {"confirmed": confirmed}
+        assert (await ask(rig.session, ["lock.door"], "unlock", origin="touch", **extra))["code"] == "needs_confirm", confirmed
+    # the latch is not the lock's unlock: it still needs the PIN, and there is none
+    assert (await ask(rig.session, ["lock.door"], "open", origin="touch", confirmed=True))["code"] == "sensitive_disabled"
+    # a lock the person did not allow under Sensitive actions
+    assert (await ask(rig.session, ["lock.back"], "unlock", origin="touch", confirmed=True))["code"] == "sensitive_disabled"
+    assert not unlocks and rig.hub.actions == 0
+
+
+async def test_with_the_option_on_and_a_pin_the_latch_still_needs_the_pin(hass: HomeAssistant, rig: Rig) -> None:
+    hass.states.async_set("lock.door", "locked")
+    opens = async_mock_service(hass, "lock", "open")
+    await rig.start(["lock.door"], ["lock"], **with_pin(**{OPT_SENSITIVE: ["lock.door"], OPT_UNLOCK_CONFIRM_ONLY: True}))
+    assert (await ask(rig.session, ["lock.door"], "open", origin="touch", confirmed=True))["code"] == "pin_required"
+    assert (await ask(rig.session, ["lock.door"], "open", origin="touch", confirmed=True, pin="0000"))["code"] == "pin_wrong"
+    assert not opens
+    assert (await ask(rig.session, ["lock.door"], "open", origin="touch", confirmed=True, pin=PIN))["ok"] is True and len(opens) == 1
+
+
+async def test_with_the_option_off_a_confirmed_touch_alone_never_unlocks(hass: HomeAssistant, rig: Rig) -> None:
+    hass.states.async_set("lock.door", "locked")
+    unlocks = async_mock_service(hass, "lock", "unlock")
+    await rig.start(["lock.door"], ["lock"], **with_pin(**{OPT_SENSITIVE: ["lock.door"]}))
+    assert (await ask(rig.session, ["lock.door"], "unlock", origin="touch", confirmed=True))["code"] == "pin_required"
+    assert not unlocks
+
+
+async def test_a_call_for_several_locks_is_done_only_when_the_person_allowed_every_one(hass: HomeAssistant, rig: Rig) -> None:
+    unlocks = await confirm_only_rig(hass, rig, pin=False)
+    assert (await ask(rig.session, ["lock.door", "lock.back"], "unlock", origin="touch", confirmed=True))["code"] == "sensitive_disabled"
+    assert not unlocks
+    rig.hass.config_entries.async_update_entry(rig.entry, options={**rig.entry.options, OPT_SENSITIVE: ["lock.door", "lock.back"]})
+    await rig.hass.async_block_till_done()
+    rig.session = await rig.show.wait_session()
+    result = await ask(rig.session, ["lock.door", "lock.back"], "unlock", origin="touch", confirmed=True)
+    assert result["ok"] is True and {c.data["entity_id"] for c in unlocks} == {"lock.door", "lock.back"}
+
+
+async def test_the_option_does_not_waive_the_pin_for_anything_but_a_lock(hass: HomeAssistant, rig: Rig) -> None:
+    hass.states.async_set("cover.garage", "closed", {"device_class": "garage"})
+    hass.states.async_set("siren.hall", "off")
+    opened = async_mock_service(hass, "cover", "open_cover")
+    await rig.start(
+        ["cover.garage", "siren.hall"], ["cover"], **with_pin(**{OPT_SENSITIVE: ["cover.garage", "siren.hall"], OPT_UNLOCK_CONFIRM_ONLY: True})
+    )
+    assert (await ask(rig.session, ["cover.garage"], "open_cover", origin="touch", confirmed=True))["code"] == "pin_required"
+    assert (await ask(rig.session, ["siren.hall"], "turn_off", origin="touch", confirmed=True))["code"] == "pin_required"
+    assert not opened
+
+
+async def test_pausing_control_stops_the_confirmation_only_unlock(hass: HomeAssistant, rig: Rig) -> None:
+    unlocks = await confirm_only_rig(hass, rig, pin=False)
+    rig.hub.set_paused(True)
+    await hass.async_block_till_done()
+    snapshot = await rig.session.wait(lambda m: m["m"] == "states" and m["t"] == "snapshot" and m["policy"]["paused"] is True)
+    assert all("ctl_pin" not in e and not e.get("ctl") for e in snapshot["entities"])
+    assert (await ask(rig.session, ["lock.door"], "unlock", origin="touch", confirmed=True))["code"] == "paused"
+    assert not unlocks
+
+
+async def test_wrong_pins_lock_out_the_confirmation_only_unlock_too(hass: HomeAssistant, rig: Rig) -> None:
+    unlocks = await confirm_only_rig(hass, rig, pin=True, **{OPT_SENSITIVE: ["lock.door"]})
+    for _ in range(5):
+        await ask(rig.session, ["lock.door"], "open", origin="touch", confirmed=True, pin="1111")
+    assert (await ask(rig.session, ["lock.door"], "unlock", origin="touch", confirmed=True))["code"] == "locked_out"
+    assert not unlocks

@@ -6,7 +6,7 @@ from typing import Final
 
 DOMAIN: Final = "lumashow"
 # The version this integration reports in its hello (the manifest's: a test holds them together).
-VERSION: Final = "0.2.0"
+VERSION: Final = "0.3.0"
 
 NAME: Final = "LumaShow"
 
@@ -31,6 +31,7 @@ OPT_ENTITIES: Final = "entities"  # the list: what the Show is given, exactly
 OPT_CONTROL_DOMAINS: Final = "control_domains"  # domains whose ordinary verbs the Show may use
 OPT_READ_ONLY: Final = "read_only"  # shared entities the Show may never act on
 OPT_SENSITIVE: Final = "sensitive"  # entities whose sensitive verbs are enabled (with the PIN)
+OPT_UNLOCK_CONFIRM_ONLY: Final = "unlock_confirm_only"  # a lock allowed as sensitive is unlocked by this device's confirmed touch, no PIN
 OPT_PIN_HASH: Final = "pin_hash"
 OPT_PIN_SALT: Final = "pin_salt"
 OPT_FORWARD_NOTIFICATIONS: Final = "forward_notifications"  # Home Assistant's persistent notifications

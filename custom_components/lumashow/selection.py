@@ -23,6 +23,7 @@ from .const import (
     OPT_PIN_HASH,
     OPT_READ_ONLY,
     OPT_SENSITIVE,
+    OPT_UNLOCK_CONFIRM_ONLY,
 )
 from .policy import NAMED_ONLY_DOMAINS, domain_of, verb_lists, verbs_of
 
@@ -224,6 +225,14 @@ def control_flags(options: Mapping[str, Any], entity_id: str) -> tuple[bool, boo
     return control, sensitive
 
 
+def confirm_unlock_flag(options: Mapping[str, Any], entity_id: str) -> bool:
+    """Whether a lock is unlocked by a confirmed touch alone: the device's option is on and the person allowed this lock's sensitive verbs.
+
+    It does not need a PIN to exist. It never applies to another domain.
+    """
+    return bool(options.get(OPT_UNLOCK_CONFIRM_ONLY)) and domain_of(entity_id) == "lock" and entity_id in (options.get(OPT_SENSITIVE) or ())
+
+
 def summary(hass: HomeAssistant, options: Mapping[str, Any]) -> tuple[int, int]:
     """``(shared, controllable)``: how many entities the Show is given and how many of them it may act on."""
     shared = resolve(hass, options)
@@ -236,6 +245,7 @@ def summary(hass: HomeAssistant, options: Mapping[str, Any]) -> tuple[int, int]:
             state.attributes if state else None,
             control=control,
             sensitive=sensitive,
+            confirm_unlock=confirm_unlock_flag(options, entity_id),
         )
         if ordinary or needing_pin:
             controllable += 1
