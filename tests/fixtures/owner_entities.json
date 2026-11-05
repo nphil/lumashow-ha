@@ -87,6 +87,28 @@
       "supported_features": 32
     }
   },
+  "fan.living_room_vent_fan": {
+    "state": "on",
+    "attributes": {
+      "preset_modes": ["Auto", "Timer to On", "Timer to Off", "Cycle"],
+      "percentage": 50,
+      "percentage_step": 10.0,
+      "preset_mode": "Auto",
+      "friendly_name": "Vent Fan",
+      "supported_features": 57
+    }
+  },
+  "fan.nitin_s_office_fan": {
+    "state": "off",
+    "attributes": {
+      "preset_modes": [],
+      "percentage": 33,
+      "percentage_step": 33.333333333333336,
+      "preset_mode": null,
+      "friendly_name": "Fan",
+      "supported_features": 49
+    }
+  },
   "climate.living_room_thermostat": {
     "state": "heat_cool",
     "attributes": {

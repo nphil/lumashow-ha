@@ -94,6 +94,10 @@ async def test_the_owners_lamps_and_thermostats_reach_the_show_with_their_colour
     assert len(hue["attrs"]["effect_list"]) == 20
     assert hue["ctl"] == ["turn_on", "turn_off", "toggle"]
     assert len(by_id["light.living_room_floor_lamp"]["attrs"]["effect_list"]) == 111
+    assert (
+        by_id["fan.living_room_vent_fan"]["attrs"] == {"friendly_name": "Vent Fan", "percentage": 50, "preset_mode": "Auto"}
+        and "ctl" not in by_id["fan.living_room_vent_fan"]
+    )
     thermostat = by_id["climate.living_room_thermostat"]
     assert thermostat["attrs"]["current_humidity"] == 77.0 and thermostat["attrs"]["min_temp"] == 64
     assert {"set_temperature", "set_hvac_mode"} <= set(thermostat["ctl"])
