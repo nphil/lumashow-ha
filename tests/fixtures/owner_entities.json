@@ -1,0 +1,146 @@
+{
+  "_": "States and attributes of the owner's own entities, as Home Assistant 2026.10 reported them (ha_get_state, 2026-11-04). Nothing is made up.",
+  "light.master_bedroom_corner_light": {
+    "state": "on",
+    "attributes": {
+      "min_color_temp_kelvin": 2000,
+      "max_color_temp_kelvin": 6535,
+      "effect_list": ["blink", "breathe", "okay", "channel_change", "candle", "fireplace", "colorloop", "sunset", "sunrise", "sparkle", "opal", "glisten", "underwater", "cosmos", "sunbeam", "enchant", "none", "finish_effect", "stop_effect", "stop_hue_effect"],
+      "supported_color_modes": ["color_temp", "xy"],
+      "effect": "opal",
+      "color_mode": "color_temp",
+      "brightness": 255,
+      "color_temp_kelvin": 2000,
+      "hs_color": [30.601, 94.547],
+      "rgb_color": [255, 137, 14],
+      "xy_color": [0.598, 0.383],
+      "friendly_name": "Corner Light",
+      "supported_features": 44
+    }
+  },
+  "light.living_room_floor_lamp": {
+    "state": "off",
+    "attributes": {
+      "min_color_temp_kelvin": 2700,
+      "max_color_temp_kelvin": 6500,
+      "effect_list": ["Dracarys", "Green Reign", "Fire & Blood", "Venus", "Neptune", "Earth B", "Nebula", "Starry Sky", "Meteor", "Milky Way", "Space Walk", "Cosmic Echoes", "Interstellar Voyage", "Vast Cosmos", "Mercury", "Earth", "Mars", "Jupiter", "Saturn", "Uranus", "Dusk", "Desert", "Star", "Water Drop", "Sunset", "Sunrise", "Aurora B", "Aurora C", "Aurora D", "Sunny", "Forest", "Ocean", "Sunset Glow", "Aurora", "Rainbow", "Cornfield", "Glacier", "Bonfire", "Stream", "Cherry blossoms", "Waterfall", "Firefly", "Snowing", "Moonlight", "Ghost", "Christmas B", "Halloween B", "Heartbeat", "New Years", "Christmas", "Candy Cane", "Christmas Bell", "Halloween", "Graveyard", "Easter", "Thanksgiving", "Carnival", "Valentine's Day", "Father's Day", "Mother's Day", "Saint Patrick's Day", "Birthday", "Family Day", "Party", "Dance Party", "Candlelight", "Classic Christmas", "Mother's Hug", "White Light", "Leisure", "Soothing", "Mysterious", "Healing", "Peaceful", "Spritual", "Joyful", "Meditation", "Dreamland", "Gradient", "Breathe", "Twinkle", "Graffiti", "Flow", "Alternate", "Gleam", "Cover", "Colorful", "Crossing", "Sleep", "Yoga", "Colorful Clouds", "Moonlight Sprinkles", "Floating Mist", "Radiance", "Wheat Wave", "Mild", "Meditation (1)", "Refreshing", "Clear Sky", "Moonlit Night", "Fascination", "Spring Tour", "Dreamlike", "Blue Sky & White Clouds", "Dense fog", "Flash", "Gary", "Judy", "Nick", "ZDP Duo", "ZDP Trio"],
+      "supported_color_modes": ["color_temp", "rgb"],
+      "effect": null,
+      "color_mode": null,
+      "brightness": null,
+      "color_temp_kelvin": null,
+      "hs_color": null,
+      "rgb_color": null,
+      "xy_color": null,
+      "friendly_name": "Floor Lamp",
+      "supported_features": 4
+    }
+  },
+  "light.plant_room_aquarium_light": {
+    "state": "on",
+    "attributes": {
+      "effect_list": ["off", "Thunderstorm", "Lightning", "Sun and lightning", "Colour cycle", "Mostly sunny", "Partly sunny", "Partly cloudy", "Mostly cloudy", "Full moon", "Half moon", "Crescent moon"],
+      "supported_color_modes": ["rgb"],
+      "effect": "off",
+      "color_mode": "rgb",
+      "brightness": 13,
+      "hs_color": [236.941, 100.0],
+      "rgb_color": [0, 13, 255],
+      "xy_color": [0.136, 0.042],
+      "friendly_name": "Aquarium Light",
+      "supported_features": 4
+    }
+  },
+  "light.nitin_s_office_canvas_lights": {
+    "state": "unavailable",
+    "attributes": {
+      "min_color_temp_kelvin": 1200,
+      "max_color_temp_kelvin": 6500,
+      "effect_list": ["Bedtime", "Color Burst", "Falling Whites", "Fireworks", "Fireworks and Firecrackers", "Flames", "Forest", "Inner Peace", "Meteor Shower", "Nemo", "Northern Lights", "Paint Splatter", "Pulse Pop Beats", "Radial Sound Bar", "Rhythmic Northern Lights", "Romantic", "Sound Bar", "Streaking Notes"],
+      "supported_color_modes": ["color_temp", "hs"],
+      "friendly_name": "Office Canvas Lights",
+      "supported_features": 36
+    }
+  },
+  "light.isabel_s_office_nightlight": {
+    "state": "off",
+    "attributes": {
+      "effect_list": ["blink", "breathe", "okay", "channel_change", "finish_effect", "stop_effect", "colorloop", "stop_colorloop"],
+      "supported_color_modes": ["xy"],
+      "effect": null,
+      "color_mode": null,
+      "brightness": null,
+      "hs_color": null,
+      "rgb_color": null,
+      "xy_color": null,
+      "friendly_name": "Nightlight",
+      "supported_features": 44
+    }
+  },
+  "light.kitchen_lights": {
+    "state": "on",
+    "attributes": {
+      "supported_color_modes": ["brightness"],
+      "color_mode": "brightness",
+      "brightness": 112,
+      "friendly_name": "Lights",
+      "supported_features": 32
+    }
+  },
+  "climate.living_room_thermostat": {
+    "state": "heat_cool",
+    "attributes": {
+      "hvac_modes": ["off", "heat", "cool", "heat_cool"],
+      "min_temp": 64,
+      "max_temp": 84,
+      "min_humidity": 20,
+      "max_humidity": 50,
+      "fan_modes": ["on", "auto"],
+      "current_temperature": 74,
+      "temperature": null,
+      "target_temp_high": 76,
+      "target_temp_low": 67,
+      "current_humidity": 77.0,
+      "humidity": 50.0,
+      "fan_mode": "auto",
+      "hvac_action": "idle",
+      "friendly_name": "Thermostat",
+      "supported_features": 399
+    }
+  },
+  "climate.nitin_s_office_ac": {
+    "state": "off",
+    "attributes": {
+      "hvac_modes": ["off", "heat_cool", "cool", "heat", "fan_only", "dry"],
+      "min_temp": 62.5,
+      "max_temp": 86.0,
+      "target_temp_step": 0.5,
+      "fan_modes": ["auto", "low", "medium", "high", "silent", "turbo"],
+      "preset_modes": ["none", "boost", "eco", "sleep", "freeze protection"],
+      "swing_modes": ["off", "both", "vertical", "horizontal"],
+      "current_temperature": 74.5,
+      "temperature": 74.5,
+      "fan_mode": "auto",
+      "preset_mode": "none",
+      "swing_mode": "vertical",
+      "friendly_name": "AC",
+      "supported_features": 441
+    }
+  },
+  "climate.master_bedroom_bedjet": {
+    "state": "off",
+    "attributes": {
+      "hvac_modes": ["off", "heat", "cool", "dry"],
+      "min_temp": 66,
+      "max_temp": 109,
+      "fan_modes": ["5%", "10%", "15%", "20%", "25%", "30%", "35%", "40%", "45%", "50%", "55%", "60%", "65%", "70%", "75%", "80%", "85%", "90%", "95%", "100%"],
+      "preset_modes": ["none", "Turbo", "Extended Heat", "Sleepytime", "NEMORY 2", "COLDU"],
+      "current_temperature": 75,
+      "temperature": 72,
+      "fan_mode": "5%",
+      "preset_mode": "none",
+      "friendly_name": "BedJet",
+      "supported_features": 409
+    }
+  }
+}

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.1
+
+A lamp's colour and effects and a thermostat's limits and humidity reach a LumaTV, so that its card can draw the colour wheel, the effects and the lamp's own white range, and a thermostat's sheet.
+
+- **Lamps** also send `hs_color`, `effect_list` and the lamp's colour-temperature limits (`min_color_temp_kelvin`, `max_color_temp_kelvin`). `effect_list` is cut at its first 128 names, each of at most
+  64 characters (a floor lamp lists over a hundred); every other list over 16 entries is still dropped.
+- **Thermostats** also send `min_temp`, `max_temp`, `target_temp_step`, `current_humidity` and `humidity`.
+- Nothing else changes: what a device may do is still only what *Configure › What the Show may control* allows.
+
 ## 0.3.0
 
 A weather module and a per-device way to unlock a lock from a LumaTV's own confirmation.

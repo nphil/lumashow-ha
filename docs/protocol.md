@@ -165,15 +165,15 @@ An entity carries only the attributes its domain lists here (so a light's `suppo
 | Domain | Attributes |
 |---|---|
 | every | `friendly_name`, `device_class`, `icon`, `unit_of_measurement`, `state_class` |
-| `light` | `brightness`, `color_mode`, `color_temp_kelvin`, `rgb_color`, `supported_color_modes` (list ≤ 8), `effect` |
+| `light` | `brightness`, `color_mode`, `color_temp_kelvin`, `min_color_temp_kelvin`, `max_color_temp_kelvin`, `hs_color`, `rgb_color`, `supported_color_modes` (list ≤ 8), `effect`, `effect_list` (see below) |
 | `event` | `event_type`, `event_types` (list ≤ 8) |
 | `cover` | `current_position`, `current_tilt_position` |
-| `climate` | `current_temperature`, `temperature`, `target_temp_high`, `target_temp_low`, `hvac_action`, `hvac_modes`, `preset_mode` |
+| `climate` | `current_temperature`, `temperature`, `target_temp_high`, `target_temp_low`, `target_temp_step`, `min_temp`, `max_temp`, `current_humidity`, `humidity`, `hvac_action`, `hvac_modes`, `preset_mode` |
 | `media_player` | `media_title`, `media_artist`, `volume_level`, `is_volume_muted`, `source` |
 | `fan` | `percentage`, `preset_mode`, `oscillating` |
 | `sensor`, `binary_sensor` | (the common ones only) |
 
-A text longer than 128 characters is dropped, a list longer than 16 entries is dropped. The Show keeps the subset its widgets use today
+A text longer than 128 characters is dropped, a list longer than 16 entries is dropped. The one exception is a light's `effect_list`, the names of its effects (a floor lamp lists over a hundred): it is cut at its first 128 names, and a name longer than 64 characters (what the `effect` argument of `turn_on` takes) is left out of it. The Show keeps the subset its widgets use today
 (`friendly_name`, `device_class`, `event_type`, `brightness`, `icon`, `unit_of_measurement`) and may keep more later.
 
 ## 10. `alarms` (module version 1) and the reserved modules

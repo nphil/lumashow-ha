@@ -11,6 +11,10 @@ from typing import Any, Final
 
 MAX_TEXT: Final = 128
 MAX_LIST: Final = 16
+# A lamp's effects are its own names, and a floor lamp or a strip lists a hundred (the longest at the owner's has 111): that one list is cut at this
+# many names, each at most as long as the `effect` verb takes (policy.py), where any other list over MAX_LIST is dropped.
+MAX_EFFECTS: Final = 128
+MAX_EFFECT_NAME: Final = 64
 
 COMMON: Final = ("friendly_name", "device_class", "icon", "unit_of_measurement", "state_class")
 
@@ -19,9 +23,13 @@ BY_DOMAIN: Final[dict[str, tuple[str, ...]]] = {
         "brightness",
         "color_mode",
         "color_temp_kelvin",
+        "min_color_temp_kelvin",
+        "max_color_temp_kelvin",
+        "hs_color",
         "rgb_color",
         "supported_color_modes",
         "effect",
+        "effect_list",
     ),
     "event": ("event_type", "event_types"),
     "cover": ("current_position", "current_tilt_position"),
@@ -30,6 +38,11 @@ BY_DOMAIN: Final[dict[str, tuple[str, ...]]] = {
         "temperature",
         "target_temp_high",
         "target_temp_low",
+        "target_temp_step",
+        "min_temp",
+        "max_temp",
+        "current_humidity",
+        "humidity",
         "hvac_action",
         "hvac_modes",
         "preset_mode",
@@ -56,13 +69,21 @@ def _clean(value: Any) -> tuple[bool, Any]:
     return (True, value) if _plain(value) else (False, None)
 
 
+def _effects(value: Any) -> tuple[bool, Any]:
+    """The names of a lamp's effects that can be asked for again (text of at most MAX_EFFECT_NAME characters), the first MAX_EFFECTS of them."""
+    if not isinstance(value, (list, tuple)):
+        return False, None
+    names = [v for v in value if isinstance(v, str) and 0 < len(v) <= MAX_EFFECT_NAME]
+    return (True, names[:MAX_EFFECTS]) if names else (False, None)
+
+
 def filter_attributes(domain: str, attributes: Mapping[str, Any]) -> dict[str, Any]:
     """The attributes of an entity of ``domain`` that may be sent."""
     allowed = COMMON + BY_DOMAIN.get(domain, ())
     out: dict[str, Any] = {}
     for name in allowed:
         if name in attributes:
-            ok, value = _clean(attributes[name])
+            ok, value = _effects(attributes[name]) if name == "effect_list" else _clean(attributes[name])
             if ok:
                 out[name] = value
     return out

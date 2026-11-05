@@ -2,11 +2,17 @@
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
 import pytest
 
 from custom_components.lumashow import policy
 from custom_components.lumashow.attributes import filter_attributes
 from custom_components.lumashow.policy import VERBS, BadArgs, describe, is_sensitive, validate_args, verb_lists
+
+# The owner's own lamps and thermostats, as Home Assistant reported them (tests/fixtures/owner_entities.json).
+OWNER = json.loads((Path(__file__).parent / "fixtures" / "owner_entities.json").read_text())
 
 
 def test_every_verb_is_a_plain_service_name_and_there_is_no_free_form_call() -> None:
@@ -154,3 +160,51 @@ def test_only_the_attributes_a_domain_lists_leave() -> None:
     assert filter_attributes("camera", {"access_token": "t", "friendly_name": "Door", "entity_picture": "/x"}) == {"friendly_name": "Door"}
     assert filter_attributes("sensor", {"unit_of_measurement": "°C", "brightness": 4}) == {"unit_of_measurement": "°C"}
     assert filter_attributes("light", {"supported_color_modes": list(range(17))}) == {}
+
+
+def test_the_colour_the_effects_and_the_white_range_of_the_owners_lamps_leave_and_so_do_a_thermostats_limits_and_humidity() -> None:
+    def sent(entity_id: str) -> dict:
+        return filter_attributes(entity_id.partition(".")[0], OWNER[entity_id]["attributes"])
+
+    hue = sent("light.master_bedroom_corner_light")
+    assert hue["hs_color"] == [30.601, 94.547] and hue["color_mode"] == "color_temp" and hue["effect"] == "opal"
+    assert (hue["min_color_temp_kelvin"], hue["max_color_temp_kelvin"]) == (2000, 6535)
+    assert hue["effect_list"] == OWNER["light.master_bedroom_corner_light"]["attributes"]["effect_list"] and len(hue["effect_list"]) == 20
+    assert "xy_color" not in hue and "supported_features" not in hue
+
+    # a floor lamp's hundred and eleven effects go whole and in order, and each is a name the lamp can be asked for again
+    floor = sent("light.living_room_floor_lamp")
+    assert floor["effect_list"] == OWNER["light.living_room_floor_lamp"]["attributes"]["effect_list"] and len(floor["effect_list"]) == 111
+    assert (floor["min_color_temp_kelvin"], floor["max_color_temp_kelvin"]) == (2700, 6500)
+    assert "hs_color" not in floor and "effect" not in floor, "a lamp that is off has no colour and no effect: null is not sent"
+    for name in floor["effect_list"]:
+        assert validate_args("light", "turn_on", {"effect": name}) == {"effect": name}
+
+    assert sent("light.nitin_s_office_canvas_lights")["min_color_temp_kelvin"] == 1200
+    assert sent("light.plant_room_aquarium_light")["hs_color"] == [236.941, 100.0]
+    assert "effect_list" not in sent("light.kitchen_lights"), "a lamp with no effects says none"
+
+    thermostat = sent("climate.living_room_thermostat")
+    assert thermostat == {
+        "friendly_name": "Thermostat",
+        "hvac_modes": ["off", "heat", "cool", "heat_cool"],
+        "min_temp": 64,
+        "max_temp": 84,
+        "current_temperature": 74,
+        "target_temp_high": 76,
+        "target_temp_low": 67,
+        "current_humidity": 77.0,
+        "humidity": 50.0,
+        "hvac_action": "idle",
+    }
+    assert sent("climate.nitin_s_office_ac")["target_temp_step"] == 0.5
+
+
+def test_a_list_of_effects_is_cut_where_every_other_long_list_is_dropped() -> None:
+    names = [f"Effect {n}" for n in range(200)]
+    assert filter_attributes("light", {"effect_list": names})["effect_list"] == names[:128]
+    # a name the effect verb could not carry again is left out, and a list with nothing usable in it is not sent
+    assert filter_attributes("light", {"effect_list": ["Rainbow", "x" * 65, 7, ""]}) == {"effect_list": ["Rainbow"]}
+    assert filter_attributes("light", {"effect_list": [7, ""]}) == {}
+    assert filter_attributes("light", {"effect_list": "Rainbow"}) == {}
+    assert filter_attributes("climate", {"hvac_modes": [f"m{n}" for n in range(17)]}) == {}

@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import asyncio
+import json
+from pathlib import Path
 
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -72,6 +74,29 @@ async def test_the_show_gets_exactly_the_list_the_allowed_attributes_and_only_th
     assert snapshot["areas"] == [{"id": kitchen.id, "name": "Kitchen"}], "the names of the shared entities' areas, and no other"
     assert "access_token" not in str(snapshot) and "secret" not in str(snapshot)
     assert "front_door" not in str(snapshot) and "Bedroom" not in str(snapshot)
+
+
+async def test_the_owners_lamps_and_thermostats_reach_the_show_with_their_colour_effects_and_limits(
+    hass: HomeAssistant, show: FakeShow, entry: MockConfigEntry
+) -> None:
+    owner = json.loads((Path(__file__).parent / "fixtures" / "owner_entities.json").read_text())
+    ids = [i for i in owner if i != "_"]
+    for entity_id in ids:
+        hass.states.async_set(entity_id, owner[entity_id]["state"], owner[entity_id]["attributes"])
+    hass.config_entries.async_update_entry(entry, options={OPT_ENTITIES: ids, OPT_CONTROL_DOMAINS: ["light", "climate"]})
+    await setup(hass, entry)
+    snapshot = await snapshot_of(await show.wait_session())
+    by_id = {e["id"]: e for e in snapshot["entities"]}
+    assert sorted(by_id) == sorted(ids)
+    hue = by_id["light.master_bedroom_corner_light"]
+    assert hue["attrs"]["hs_color"] == [30.601, 94.547] and hue["attrs"]["effect"] == "opal"
+    assert (hue["attrs"]["min_color_temp_kelvin"], hue["attrs"]["max_color_temp_kelvin"]) == (2000, 6535)
+    assert len(hue["attrs"]["effect_list"]) == 20
+    assert hue["ctl"] == ["turn_on", "turn_off", "toggle"]
+    assert len(by_id["light.living_room_floor_lamp"]["attrs"]["effect_list"]) == 111
+    thermostat = by_id["climate.living_room_thermostat"]
+    assert thermostat["attrs"]["current_humidity"] == 77.0 and thermostat["attrs"]["min_temp"] == 64
+    assert {"set_temperature", "set_hvac_mode"} <= set(thermostat["ctl"])
 
 
 async def test_the_verbs_the_show_is_told_follow_what_the_person_allowed(hass: HomeAssistant, show: FakeShow, entry: MockConfigEntry) -> None:
