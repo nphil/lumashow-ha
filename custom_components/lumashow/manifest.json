@@ -9,6 +9,9 @@
     "zeroconf",
     "go2rtc"
   ],
+  "categories": [
+    "other_ecosystems"
+  ],
   "codeowners": [
     "@nphil"
   ],
@@ -23,7 +26,7 @@
   "requirements": [
     "noiseprotocol>=0.3.1,<1.0"
   ],
-  "version": "0.3.1",
+  "version": "0.3.2",
   "zeroconf": [
     "_lumashow._tcp.local."
   ]

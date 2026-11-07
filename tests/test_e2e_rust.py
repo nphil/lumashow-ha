@@ -17,7 +17,7 @@ from typing import Any
 
 import pytest
 from homeassistant.core import HomeAssistant
-from pytest_homeassistant_custom_component.common import MockConfigEntry, async_mock_service
+from pytest_homeassistant.common import MockConfigEntry, async_mock_service
 
 from custom_components.lumashow.channel import AuthError, Channel, probe
 from custom_components.lumashow.const import DOMAIN, OPT_CONTROL_DOMAINS, OPT_ENTITIES, OPT_SENSITIVE

@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.3.2
+
+Ready for Home Assistant 2026.11. Tested on 2026.10 and 2026.11 (what it calls is there from 2026.9, the oldest it is written for). The tests now run against the newest stable and the beta Home Assistant every week.
+
+- **Parts of a device (Home Assistant 2026.11).** Z-Wave, Tuya and ZHA devices are now made of a device and *child devices* (a double outlet is one device with a part for each socket). A part has no
+  area of its own: it stands where its device stands. Choosing an area under *Configure* now also finds the entities of the parts of the devices in it, choosing a device takes its parts too, and the
+  area a Show is told for such an entity is the one it really stands in (it was none). A part's entity is called by its device and itself ("Garage outlet Socket 1"), as Home Assistant names it.
+- **Renaming an entity's id** (2026.11 changes it in place): the entities of a Show ask for that, so renaming one of them in Home Assistant no longer takes it away and brings it back.
+- **Tests** run on Home Assistant's new test harness (`pytest-homeassistant`, which replaces the community package and is versioned like Home Assistant), and the weekly *HA compatibility* run on GitHub
+  tests the newest stable and beta release. One test that held a date in the past (a hand-made calendar event) no longer does. The manifest says what the integration is for (`other_ecosystems`).
+
 ## 0.3.1
 
 A lamp's colour and effects and a thermostat's limits and humidity reach a LumaTV, so that its card can draw the colour wheel, the effects and the lamp's own white range, and a thermostat's sheet.

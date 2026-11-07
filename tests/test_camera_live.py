@@ -9,7 +9,7 @@ from unittest.mock import patch
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry
 
 from custom_components.lumashow.camera_live import CameraLiveModule
 from custom_components.lumashow.const import DOMAIN, OPT_CAMERA_EVENTS, OPT_ENTITIES

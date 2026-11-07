@@ -13,7 +13,7 @@ from typing import Any
 import pytest
 from homeassistant.components.calendar.const import DATA_COMPONENT
 from homeassistant.core import Event, HomeAssistant
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry
 
 from custom_components.lumashow import alarms as alarms_module
 from custom_components.lumashow.alarms import CALENDAR_ENTITY, EVENT_ALARM, AlarmsModule
@@ -23,7 +23,8 @@ from .conftest import MAC, PAIRING_KEY, entry_data, setup
 from .fake_show import FakeShow
 
 GYM: dict[str, Any] = {"label": "Gym", "time": "06:30", "days": ["mon", "tue", "wed", "thu", "fri"], "on": True, "volume": 70, "ring": "every"}
-SOON = (dt.date.today() + dt.timedelta(days=3)).isoformat()  # inside the window the calendar is read in
+SOON_DAY = dt.date.today() + dt.timedelta(days=3)  # inside the window the calendar is read in: a fixed date would fall out of it
+SOON = SOON_DAY.isoformat()
 ONCE: dict[str, Any] = {"label": "Flight", "time": "05:15", "days": [], "date": SOON, "on": True, "volume": 100, "ring": "every"}
 AT = 1_792_500_000
 
@@ -257,9 +258,10 @@ async def test_an_event_made_by_hand_is_an_alarm_that_no_show_has_edited_and_an_
 ) -> None:
     black = FakeHub("lumashow-black")
     await up(module, black)
-    await calendar.async_create_event(summary="Dentist", dtstart=dt.datetime(2026, 10, 22, 9, 0), dtend=dt.datetime(2026, 10, 22, 9, 30))
+    nine = dt.datetime.combine(SOON_DAY, dt.time(9, 0))
+    await calendar.async_create_event(summary="Dentist", dtstart=nine, dtend=nine + dt.timedelta(minutes=30))
     await calendar.async_create_event(
-        summary="Rent", dtstart=dt.datetime(2026, 10, 3, 9, 0), dtend=dt.datetime(2026, 10, 3, 9, 30), rrule="FREQ=MONTHLY;BYMONTHDAY=3"
+        summary="Rent", dtstart=nine, dtend=nine + dt.timedelta(minutes=30), rrule=f"FREQ=MONTHLY;BYMONTHDAY={SOON_DAY.day}"
     )
     await until(hass, lambda: any(a["label"] == "Dentist" for a in black.last("snapshot")["alarms"]), "the hand-made alarm")
     alarms = black.last("snapshot")["alarms"]
@@ -271,7 +273,7 @@ async def test_an_event_made_by_hand_is_an_alarm_that_no_show_has_edited_and_an_
         1,
         100,
         "every",
-        "2026-10-22",
+        SOON,
     )
     assert dentist["days"] == [] and dentist["time"] == "09:00"
 

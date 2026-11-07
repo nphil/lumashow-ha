@@ -39,5 +39,11 @@ class LumaShowEntity(Entity):
         self.async_on_remove(async_dispatcher_connect(self.hass, SIGNAL_UPDATE.format(self.hub.entry.entry_id), self._hub_changed))
 
     @callback
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Opts in to Home Assistant 2026.11's in-place entity id change: nothing here is keyed on the entity id (the signal is the entry's),
+        so there is nothing to re-key."""
+        super().async_entity_id_changed(old_entity_id)
+
+    @callback
     def _hub_changed(self) -> None:
         self.async_write_ha_state()

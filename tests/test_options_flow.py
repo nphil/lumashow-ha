@@ -13,8 +13,9 @@ from homeassistant.helpers import area_registry as ar
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry
 
+from custom_components.lumashow import selection
 from custom_components.lumashow.const import (
     OPT_CAMERA_EVENTS,
     OPT_CONTROL_DOMAINS,
@@ -133,6 +134,71 @@ async def test_a_quick_start_by_device_adds_that_devices_entities(hass: HomeAssi
     result = await go(hass, result, "pick_device", {"devices": [ids["hub"]]})
     assert said(result).startswith("Added 3 from these devices.")
     assert (await save(hass, result))[OPT_ENTITIES] == ["light.kitchen_main", "sensor.kitchen_temp", "switch.kitchen_plug"]
+
+
+def house_with_parts(hass: HomeAssistant) -> dict[str, str]:
+    """A garage with a double outlet. Home Assistant 2026.11's integrations (Z-Wave, Tuya, ZHA) make the sockets of such a device child devices of it: a socket
+    has no area of its own, it stands where the outlet stands."""
+    garage = ar.async_get(hass).async_create("Garage")
+    owner = MockConfigEntry(domain="demo_house")
+    owner.add_to_hass(hass)
+    devices = dr.async_get(hass)
+    outlet = devices.async_get_or_create(config_entry_id=owner.entry_id, identifiers={("demo_house", "outlet")}, name="Garage outlet")
+    devices.async_update_device(outlet.id, area_id=garage.id)
+    registry = er.async_get(hass)
+
+    def part(number: int) -> dr.ChildDeviceEntry:
+        child = devices.async_get_or_create_child(
+            config_entry_id=owner.entry_id, identifiers={("demo_house", f"socket_{number}")}, name=f"Socket {number}", parent_device_id=outlet.id
+        )
+        assert child.area_id is None, "a part stands where its device stands, it is not given an area of its own"
+        registry.async_get_or_create(
+            "switch", "demo_house", f"socket_{number}", suggested_object_id=f"garage_socket_{number}", config_entry=owner, device_id=child.id
+        )
+        hass.states.async_set(f"switch.garage_socket_{number}", "on", {"friendly_name": f"Socket {number}"})
+        return child
+
+    part(1)
+    part(2)
+    registry.async_get_or_create("sensor", "demo_house", "outlet_power", suggested_object_id="garage_power", config_entry=owner, device_id=outlet.id)
+    hass.states.async_set("sensor.garage_power", "3", {"friendly_name": "Garage outlet Power"})
+    return {"garage": garage.id, "outlet": outlet.id}
+
+
+async def test_the_parts_of_a_device_are_where_the_device_is_so_a_quick_start_by_area_adds_them(hass: HomeAssistant, entry: MockConfigEntry) -> None:
+    ids = house_with_parts(hass)
+    result = await start(hass, entry)
+    result = await go(hass, result, "pick_area", {"areas": [ids["garage"]]})
+    assert said(result).startswith("Added 3 from these areas.")
+    assert (await save(hass, result))[OPT_ENTITIES] == ["sensor.garage_power", "switch.garage_socket_1", "switch.garage_socket_2"]
+
+
+async def test_a_kind_asked_for_in_one_area_finds_the_parts_of_a_device_that_stands_in_it(hass: HomeAssistant, entry: MockConfigEntry) -> None:
+    ids = house_with_parts(hass)
+    result = await start(hass, entry)
+    result = await go(hass, result, "pick_type", {"groups": ["switches"], "areas": [ids["garage"]]})
+    assert said(result).startswith("Added 2 from these kinds.")
+    assert (await save(hass, result))[OPT_ENTITIES] == ["switch.garage_socket_1", "switch.garage_socket_2"]
+
+
+async def test_a_quick_start_by_device_takes_the_parts_of_the_device_once_each(hass: HomeAssistant, entry: MockConfigEntry) -> None:
+    ids = house_with_parts(hass)
+    child_ids = [child.id for child in dr.async_entries_for_parent_device(dr.async_get(hass), ids["outlet"])]
+    assert len(child_ids) == 2
+    result = await start(hass, entry)
+    result = await go(hass, result, "pick_device", {"devices": [ids["outlet"]]})
+    assert said(result).startswith("Added 3 from these devices."), "the device stands for its parts"
+    result = await go(hass, result, "pick_device", {"devices": [ids["outlet"], *child_ids]})
+    assert said(result).startswith("Added 0 from these devices."), "a part named as well adds nothing twice"
+    assert (await save(hass, result))[OPT_ENTITIES] == ["sensor.garage_power", "switch.garage_socket_1", "switch.garage_socket_2"]
+
+
+async def test_a_part_of_a_device_is_called_by_the_device_and_the_part_not_by_the_part_alone(hass: HomeAssistant) -> None:
+    house_with_parts(hass)
+    shared = selection.resolve(hass, {OPT_ENTITIES: ["switch.garage_socket_1", "sensor.garage_power"]})
+    assert shared["switch.garage_socket_1"].name == "Garage outlet Socket 1"
+    assert shared["switch.garage_socket_1"].area_id == ar.async_get(hass).async_get_area_by_name("Garage").id, "the area it stands in, not none"
+    assert shared["sensor.garage_power"].name == "Garage outlet Power", "an entity of an ordinary device is called as it always was"
 
 
 async def test_a_quick_start_by_type_names_scripts_only_when_they_are_asked_for_by_name(hass: HomeAssistant, entry: MockConfigEntry) -> None:

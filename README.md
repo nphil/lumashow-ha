@@ -16,7 +16,7 @@ This is the Home Assistant half. The Show half is part of LumaShow OS (*Settings
 
 ## What you need
 
-- Home Assistant **2026.9** or newer (tested with 2026.9 and 2026.10), with [HACS](https://hacs.xyz) 2 (or copy the folder by hand, below).
+- Home Assistant **2026.9** or newer (tested with 2026.10 and 2026.11, and every week against the newest stable and beta release), with [HACS](https://hacs.xyz) 2 (or copy the folder by hand, below).
 - A LumaShow device on a LumaShow OS update that has *Settings › Home Assistant*.
 - Home Assistant's own **ESPHome** integration. It is what pairs the Show (it makes the key); this integration reuses that key, so you type nothing.
 - The Show and Home Assistant on the same network. **Home Assistant dials the Show** (TCP port 6054, announced as `_lumashow._tcp`); the Show never calls out. Nothing is opened on your router.

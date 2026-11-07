@@ -10,7 +10,7 @@ from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry
 
 from custom_components.lumashow.const import (
     CONF_ESPHOME_ENTRY,

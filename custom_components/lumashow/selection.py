@@ -11,7 +11,7 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from typing import Any, Final
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import area_registry as ar
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
@@ -74,14 +74,6 @@ def domains_of(groups: Iterable[str]) -> set[str]:
     return {domain for group in groups for domain in TYPE_GROUPS.get(group, ())}
 
 
-def _area_of(entry: er.RegistryEntry, devices: dr.DeviceRegistry) -> str | None:
-    if entry.area_id:
-        return entry.area_id
-    if entry.device_id and (device := devices.async_get(entry.device_id)):
-        return device.area_id
-    return None
-
-
 def _is_minor(entry: er.RegistryEntry) -> bool:
     return entry.entity_category is not None or entry.hidden_by is not None
 
@@ -117,8 +109,7 @@ def pick_by_area(
 ) -> list[str]:
     """The entities standing in these areas (their own, or their device's), of these kinds."""
     wanted = set(area_ids)
-    devices = dr.async_get(hass)
-    entries = [entry for entry in er.async_get(hass).entities.values() if _area_of(entry, devices) in wanted]
+    entries = [entry for entry in er.async_get(hass).entities.values() if er.async_get_effective_area_id(hass, entry) in wanted]
     domains = None if groups is None else domains_of(groups)
     return _chosen(entries, domains, include_minor, bulk=True)
 
@@ -131,11 +122,14 @@ def pick_by_device(
 ) -> list[str]:
     """The entities of these devices, of these kinds."""
     registry = er.async_get(hass)
-    entries: list[er.RegistryEntry] = []
+    devices = dr.async_get(hass)
+    entries: dict[str, er.RegistryEntry] = {}
     for device_id in device_ids:
-        entries.extend(er.async_entries_for_device(registry, device_id))
+        # A device stands for its parts too, as it does when it is the target of an action: a parent device and its child devices.
+        for part_id in (device_id, *(child.id for child in dr.async_entries_for_parent_device(devices, device_id))):
+            entries.update((entry.entity_id, entry) for entry in er.async_entries_for_device(registry, part_id))
     domains = None if groups is None else domains_of(groups)
-    return _chosen(entries, domains, include_minor, bulk=True)
+    return _chosen(entries.values(), domains, include_minor, bulk=True)
 
 
 def pick_by_type(
@@ -146,9 +140,8 @@ def pick_by_type(
 ) -> list[str]:
     """Every entity of these kinds in the house (or only in these areas): naming a kind is naming it, scripts and automations too."""
     domains = domains_of(groups)
-    devices = dr.async_get(hass)
     wanted = None if area_ids is None else set(area_ids)
-    entries = [entry for entry in er.async_get(hass).entities.values() if wanted is None or _area_of(entry, devices) in wanted]
+    entries = [entry for entry in er.async_get(hass).entities.values() if wanted is None or er.async_get_effective_area_id(hass, entry) in wanted]
     return _chosen(entries, domains, include_minor, bulk=False)
 
 
@@ -182,10 +175,22 @@ def listed(options: Mapping[str, Any]) -> list[str]:
     return list(dict.fromkeys(str(e) for e in raw if isinstance(e, str)))[:MAX_ENTITIES]
 
 
+def _is_part(hass: HomeAssistant, entry: er.RegistryEntry) -> bool:
+    """Whether the entity is one of a child device (a part of another device)."""
+    return bool(entry.device_id) and isinstance(dr.async_get(hass).async_get(entry.device_id), dr.ChildDeviceEntry)
+
+
+def _name_of(hass: HomeAssistant, entry: er.RegistryEntry | None, state: State | None) -> str | None:
+    """What the Show calls an entity: the name its state carries. For an entity of a child device that is the full name, because the state's
+    leaves out the parent device's (Home Assistant 2026.11's Z-Wave, Tuya and ZHA devices come as parts, and 'Outlet 1' alone names nothing)."""
+    if entry is not None and _is_part(hass, entry) and (full := er.async_get_full_entity_name(hass, entry)):
+        return full
+    return (state.name if state else None) or (entry.name or entry.original_name if entry else None)
+
+
 def resolve(hass: HomeAssistant, options: Mapping[str, Any]) -> dict[str, Shared]:
     """The shared entities that exist now, in the order of the list."""
     entities = er.async_get(hass)
-    devices = dr.async_get(hass)
     out: dict[str, Shared] = {}
     for entity_id in listed(options):
         entry = entities.async_get(entity_id)
@@ -194,11 +199,11 @@ def resolve(hass: HomeAssistant, options: Mapping[str, Any]) -> dict[str, Shared
             continue
         if entry is not None and entry.disabled_by is not None:
             continue
-        name = (state.name if state else None) or (entry.name or entry.original_name if entry else None) or entity_id
+        name = _name_of(hass, entry, state) or entity_id
         out[entity_id] = Shared(
             entity_id=entity_id,
             name=str(name),
-            area_id=_area_of(entry, devices) if entry else None,
+            area_id=er.async_get_effective_area_id(hass, entry) if entry else None,
             minor=_is_minor(entry) if entry else False,
         )
     return out

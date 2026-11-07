@@ -10,7 +10,7 @@ import pytest
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry
 
 from custom_components.lumashow.camera_events import HOLD, CameraEventsModule, classify, kind_of_words
 from custom_components.lumashow.const import DOMAIN, OPT_CAMERA_EVENTS, OPT_ENTITIES

@@ -1,6 +1,7 @@
 name: validate
 
 # This is the repository HACS reads. (The maintainer's private mirror runs `.gitea/workflows/ci.yml` instead; GitHub ignores that folder.)
+# The tests run in `ha-compat.yml`, against the newest stable and beta Home Assistant.
 on:
   push:
   pull_request:
@@ -24,12 +25,11 @@ jobs:
         with:
           category: integration
           comment: "false"
-  test:
+  lint:
     runs-on: ubuntu-latest
     container: python:3.14
     steps:
       - uses: actions/checkout@v4
-      - run: pip install --no-cache-dir -r requirements_test.txt
+      - run: pip install --no-cache-dir ruff==0.17.1
       - run: ruff check . && ruff format --check .
       - run: cmp custom_components/lumashow/strings.json custom_components/lumashow/translations/en.json
-      - run: pytest -q --timeout=120

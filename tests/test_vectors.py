@@ -14,7 +14,7 @@ from typing import Any
 
 import pytest
 from homeassistant.core import HomeAssistant
-from pytest_homeassistant_custom_component.common import async_mock_service
+from pytest_homeassistant.common import async_mock_service
 
 from custom_components.lumashow.protocol import LABEL, MAX_MESSAGE, ProtocolError, channel_key, decode, encode
 

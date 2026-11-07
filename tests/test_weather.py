@@ -7,7 +7,7 @@ from typing import Any
 
 import pytest
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry
 
 from custom_components.lumashow.const import OPT_SHARE_WEATHER, OPT_WEATHER_ENTITY
 from custom_components.lumashow.weather import MAX_DAYS, MAX_HOURS, WeatherModule, entries_of, reading_of

@@ -10,8 +10,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt as dt_util
-from pytest_homeassistant_custom_component.common import MockConfigEntry, async_mock_service
+from pytest_homeassistant.common import MockConfigEntry, async_mock_service
 
 from custom_components.lumashow.const import (
     CONF_KEY,
@@ -22,6 +23,7 @@ from custom_components.lumashow.const import (
     OPT_PIN_SALT,
 )
 from custom_components.lumashow.diagnostics import async_get_config_entry_diagnostics
+from custom_components.lumashow.entity import LumaShowEntity
 
 from .conftest import MAC, PAIRING_KEY, entry_data, settle, setup
 from .fake_show import FakeShow
@@ -132,6 +134,38 @@ async def test_actions_counts_what_was_carried_out_and_says_how_many_it_refused(
     assert state is not None and state.state == "1"
     assert state.attributes["refused"] == 1
     assert state.attributes["last_action"] == "refused: unknown_verb"
+
+
+async def test_an_entity_renamed_by_the_person_keeps_following_the_hub_under_its_new_id_and_is_changed_in_place(
+    hass: HomeAssistant, rig: Rig, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    added: list[str] = []
+    original = LumaShowEntity.async_added_to_hass
+
+    async def counted(self: LumaShowEntity) -> None:
+        added.append(self.entity_id)
+        await original(self)
+
+    monkeypatch.setattr(LumaShowEntity, "async_added_to_hass", counted)
+    light(hass)
+    async_mock_service(hass, "light", "turn_on")
+    await rig.start(["light.a"], ["light"])
+    before = len(added)
+    old = entity_of(hass, "sensor", "actions")
+    assert hass.states.get(old).state == "0"
+    er.async_get(hass).async_update_entity(old, new_entity_id="sensor.show_actions_renamed")
+    await hass.async_block_till_done()
+    assert hass.states.get(old) is None, "no state is left under the old id"
+    assert hass.states.get("sensor.show_actions_renamed").state == "0"
+    if hasattr(
+        Entity, "async_entity_id_changed"
+    ):  # Home Assistant 2026.11 and later: an entity that says it can be renamed is not taken away and brought back
+        assert len(added) == before, "changed in place, async_added_to_hass is not run again"
+    assert (await ask(rig.session, ["light.a"], "turn_on"))["ok"] is True
+    await settle(hass, 0.2)
+    renamed = hass.states.get("sensor.show_actions_renamed")
+    assert renamed is not None and renamed.state == "1", "what the hub says reaches the entity under its new id"
+    assert hass.states.get(old) is None
 
 
 async def test_a_message_sent_to_the_notify_entity_is_shown_on_the_show(hass: HomeAssistant, rig: Rig) -> None:

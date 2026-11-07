@@ -1,10 +1,13 @@
 # What the tests and the checks need (the integration's own runtime requirement, noiseprotocol, is in manifest.json too).
-# pytest-homeassistant-custom-component pins Home Assistant itself: 0.13.373 is Home Assistant 2026.10.2 (Python 3.14).
-pytest-homeassistant-custom-component==0.13.373
+# pytest-homeassistant is Home Assistant's own test harness: it is versioned like Home Assistant and pins it, so 2026.11.0 is Home Assistant 2026.11.0 (Python 3.14).
+# The weekly "HA compatibility" workflow (.github/workflows/ha-compat.yml) tests the newest stable and beta Home Assistant instead; this pinned copy is for the other checks.
+pytest-homeassistant[bluetooth]==2026.11.0
+# The harness leaves the time limit of a test to the project.
+pytest-timeout
 noiseprotocol>=0.3.1,<1.0
 # Home Assistant's camera component imports these when the integration asks a camera for a stream address.
 PyTurboJPEG
 pillow
 # The alarms' store is Home Assistant's Local Calendar; its library is what a real Home Assistant installs for it (the version its manifest names).
-ical==14.3.0
+ical==14.3.1
 ruff==0.17.1

@@ -6,7 +6,7 @@ from typing import Final
 
 DOMAIN: Final = "lumashow"
 # The version this integration reports in its hello (the manifest's: a test holds them together).
-VERSION: Final = "0.3.1"
+VERSION: Final = "0.3.2"
 
 NAME: Final = "LumaShow"
 

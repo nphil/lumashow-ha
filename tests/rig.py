@@ -6,7 +6,7 @@ from itertools import count
 from typing import Any
 
 from homeassistant.core import HomeAssistant
-from pytest_homeassistant_custom_component.common import (
+from pytest_homeassistant.common import (
     MockConfigEntry,
     async_capture_events,
     async_mock_service,
