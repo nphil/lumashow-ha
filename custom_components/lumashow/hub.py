@@ -158,7 +158,7 @@ class Hub:
         self._flush_handle: asyncio.TimerHandle | None = None
         self._resnap_handle: asyncio.TimerHandle | None = None
         self._camera_handle: asyncio.TimerHandle | None = None
-        self._last_push_signal = 0.0
+        self._last_push_signal = -LAST_PUSH_EVERY  # so the first push is shown even on a machine that was started less than a minute ago
         self._rate: deque[float] = deque()
         self._pin_failures: deque[float] = deque()
         self._locked_until = 0.0

@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import asyncio
+import time
+from types import SimpleNamespace
 
 import pytest
-from homeassistant.const import EntityCategory
+from homeassistant.const import STATE_UNKNOWN, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
@@ -14,6 +16,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt as dt_util
 from pytest_homeassistant.common import MockConfigEntry, async_mock_service
 
+from custom_components.lumashow import hub as hub_module
 from custom_components.lumashow.const import (
     CONF_KEY,
     DOMAIN,
@@ -118,6 +121,20 @@ async def test_last_push_is_a_time_to_the_minute_and_not_a_new_value_for_every_s
     await settle(hass, 0.5)
     again = hass.states.get(entity_of(hass, "sensor", "last_push"))
     assert again is not None and dt_util.parse_datetime(again.state).second == 0
+
+
+async def test_the_first_push_is_shown_even_when_the_machine_was_started_a_few_seconds_ago(
+    hass: HomeAssistant, rig: Rig, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # The throttle of the sensor counts on the machine's monotonic clock, which starts at boot: 5 s is a Home Assistant that has just started.
+    monkeypatch.setattr(hub_module, "time", SimpleNamespace(monotonic=lambda: 5.0, time=time.time))
+    light(hass)
+    await rig.start(["light.a"], ["light"])
+    entity_id = entity_of(hass, "sensor", "last_push")
+    async with asyncio.timeout(3):
+        while (state := hass.states.get(entity_id)) is None or state.state == STATE_UNKNOWN:
+            await asyncio.sleep(0.02)
+    assert dt_util.parse_datetime(state.state) is not None
 
 
 async def test_actions_counts_what_was_carried_out_and_says_how_many_it_refused(hass: HomeAssistant, rig: Rig) -> None:

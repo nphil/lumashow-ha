@@ -8,6 +8,7 @@ Ready for Home Assistant 2026.11. Tested on 2026.10 and 2026.11 (what it calls i
   area of its own: it stands where its device stands. Choosing an area under *Configure* now also finds the entities of the parts of the devices in it, choosing a device takes its parts too, and the
   area a Show is told for such an entity is the one it really stands in (it was none). A part's entity is called by its device and itself ("Garage outlet Socket 1"), as Home Assistant names it.
 - **Renaming an entity's id** (2026.11 changes it in place): the entities of a Show ask for that, so renaming one of them in Home Assistant no longer takes it away and brings it back.
+- **Last push** (the diagnostic sensor) now shows the first push even when Home Assistant was started less than a minute before (it waited for the second push in that case).
 - **Tests** run on Home Assistant's new test harness (`pytest-homeassistant`, which replaces the community package and is versioned like Home Assistant), and the weekly *HA compatibility* run on GitHub
   tests the newest stable and beta release. One test that held a date in the past (a hand-made calendar event) no longer does. The manifest says what the integration is for (`other_ecosystems`).
 
