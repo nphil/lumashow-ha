@@ -112,6 +112,14 @@ def entries_of(forecast: Any, limit: int) -> list[dict[str, Any]]:
     return out
 
 
+def home_of(hass: HomeAssistant) -> dict[str, float] | None:
+    """Where home is, to two decimals: a kilometre is close enough for the device's sunrise, sunset and radar map, and no closer is sent."""
+    latitude, longitude = _number(hass.config.latitude), _number(hass.config.longitude)
+    if latitude is None or longitude is None:
+        return None
+    return {"latitude": round(latitude, 2), "longitude": round(longitude, 2)}
+
+
 class WeatherModule:
     """The owner of module ``weather`` (registered in ``hass.data`` for the hubs to offer and to call)."""
 
@@ -245,6 +253,7 @@ class _Watch:
                 "reading": reading_of(state),
                 "hourly": hourly,
                 "daily": daily,
+                "home": home_of(self.hass),
                 "at": time.time(),
             },
         )

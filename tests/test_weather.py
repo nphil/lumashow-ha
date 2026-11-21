@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
 
@@ -10,7 +12,7 @@ from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
 from pytest_homeassistant.common import MockConfigEntry
 
 from custom_components.lumashow.const import OPT_SHARE_WEATHER, OPT_WEATHER_ENTITY
-from custom_components.lumashow.weather import MAX_DAYS, MAX_HOURS, WeatherModule, entries_of, reading_of
+from custom_components.lumashow.weather import MAX_DAYS, MAX_HOURS, WeatherModule, entries_of, home_of, reading_of
 
 ENTITY = "weather.pirate_weather"
 
@@ -175,3 +177,26 @@ async def test_a_change_of_the_entity_is_sent_once_after_the_wait_and_a_session_
     assert watch._due is not None, "the change waits for the next ones"
     await module.async_session(hub, False)  # type: ignore[arg-type]
     assert watch._due is None and watch._unsub == []
+
+
+def test_a_recorded_pirate_weather_entity_is_sent_as_the_snapshot_the_tv_maps() -> None:
+    # The same file is the LumaTV helper's fixture of what this module sends (helper/app/tests/fixtures/ha_weather_snapshot.json).
+    recorded = json.loads((Path(__file__).parent / "fixtures" / "weather_snapshot.json").read_text())
+    state = SimpleNamespace(attributes=recorded["attributes"])
+    sent = recorded["snapshot"]
+    assert reading_of(state) == sent["reading"]  # type: ignore[arg-type]
+    assert entries_of(recorded["hourly"], MAX_HOURS) == sent["hourly"]
+    assert entries_of(recorded["daily"], MAX_DAYS) == sent["daily"]
+
+
+async def test_the_snapshot_says_where_home_is_to_a_kilometre(hass: HomeAssistant) -> None:
+    await hass.config.async_update(latitude=33.7231351, longitude=-84.4445926)
+    assert home_of(hass) == {"latitude": 33.72, "longitude": -84.44}
+    calls: list[dict[str, Any]] = []
+    await _register_forecasts(hass, calls)
+    hass.states.async_set(ENTITY, "rainy", {"temperature": 61.0})
+    hub = FakeHub(hass)
+    module = WeatherModule(hass)
+    await module.async_session(hub, True)  # type: ignore[arg-type]
+    assert hub.of("snapshot")[0]["home"] == {"latitude": 33.72, "longitude": -84.44}
+    await module.async_session(hub, False)  # type: ignore[arg-type]
