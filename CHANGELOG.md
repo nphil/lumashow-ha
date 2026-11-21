@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.3.3
 
 Module `weather`'s snapshot says where home is (`home`, to two decimals), so a LumaTV that takes its weather from this module needs no Home Assistant token and still places the sunrise, the sunset and the radar map.
 
